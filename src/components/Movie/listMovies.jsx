@@ -1,6 +1,6 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { ListCardMovies } from './ListCardMovies';
+import { ListCardMovies } from "./listCardMovie.jsx";
 import MovieService from '../../services/MovieService';
 //Componente para mostrar la lista de peliculas de una tienda
 export function ListMovies() {

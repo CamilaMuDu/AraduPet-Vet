@@ -10,7 +10,7 @@ import StarIcon from '@mui/icons-material/Star';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemButton from '@mui/material/ListItemButton';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import MovieService from '../../services/MovieService';
 import Button from '@mui/material/Button';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
