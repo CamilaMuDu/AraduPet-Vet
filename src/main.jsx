@@ -12,6 +12,11 @@ import { DetailMovie } from "./components/Movie/detailMovie.jsx";
 import { CatalogMovies } from "./components/Movie/catalogoMovies.jsx";
 import Layout from './components/Layout/Layout';
 import { CatalogoProductos } from "./components/Producto/CatalogoProductos.jsx";
+import { DetalleProducto } from './components/Producto/DetalleProducto.jsx';
+import Citas from "./components/Citas/Citas.jsx";
+import { ListaFacturas } from './components/Factura/ListaFacturas.jsx';
+import { DetalleFactura } from './components/Factura/DetalleFactura.jsx';
+import DetalleCita from './components/Citas/DetalleCita';
 
 
 const rutas = createBrowserRouter([
@@ -26,8 +31,28 @@ const rutas = createBrowserRouter([
             element: <Home />,
           },
           {
+            path: '/citas',
+            element: <Citas />,
+          },
+          {
+            path: 'citas/detalle/:id',
+            element: <DetalleCita />
+          },
+          {
             path: '/productos',
             element: <CatalogoProductos />,
+          },
+          {
+            path: '/productos/:id',
+            element: <DetalleProducto />
+          },
+          {
+            path: '/facturas',
+            element: <ListaFacturas />,
+          },
+          {
+            path: '/facturas/:id',
+            element: <DetalleFactura />,
           },
           {
             path: '/catalog-movies/',
@@ -56,7 +81,7 @@ const rutas = createBrowserRouter([
 ]);
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode> 
-  <RouterProvider router={rutas} /> 
-</StrictMode>, 
+  <StrictMode>
+    <RouterProvider router={rutas} />
+  </StrictMode>,
 );

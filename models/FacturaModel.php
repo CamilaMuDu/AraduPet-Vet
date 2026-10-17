@@ -17,9 +17,12 @@ class FacturaModel
                         f.id_factura,
                         f.fecha,
                         f.estado,
-                        f.total
-                     FROM factura f
-                     ORDER BY f.fecha ASC, f.id_factura ASC";
+                        f.total,
+                        u.nombre AS cliente
+                    FROM factura f
+                    INNER JOIN usuario u
+                        ON f.id_cliente = u.id_usuario
+                    ORDER BY f.fecha DESC, f.id_factura DESC";
 
             return $this->enlace->executeSQL($vSql);
 
@@ -39,7 +42,7 @@ class FacturaModel
                     "El ID de la factura no es válido"
                 );
             }
-
+            
             $vSql = "SELECT
                         f.id_factura,
                         f.id_cliente,
@@ -49,6 +52,7 @@ class FacturaModel
                         u.correo,
                         u.direccion,
                         f.id_doctor,
+                        ud.nombre AS doctor,
                         f.id_cita,
                         f.fecha,
                         f.estado,
@@ -58,6 +62,10 @@ class FacturaModel
                     FROM factura f
                     INNER JOIN usuario u
                         ON f.id_cliente = u.id_usuario
+                    LEFT JOIN doctor d
+                        ON f.id_doctor = d.id_doctor
+                    LEFT JOIN usuario ud
+                        ON d.id_usuario = ud.id_usuario
                     WHERE f.id_factura = $id";
 
             $resultado = $this->enlace->executeSQL($vSql);

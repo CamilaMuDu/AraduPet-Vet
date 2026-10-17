@@ -1,0 +1,125 @@
+import React from 'react';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import CardMedia from '@mui/material/CardMedia';
+import CardContent from '@mui/material/CardContent';
+import CardActions from '@mui/material/CardActions';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import Box from '@mui/material/Box';
+import { Link } from 'react-router-dom';
+import { Info, Inventory2 } from '@mui/icons-material';
+import PropTypes from 'prop-types';
+
+ListCardServicios.propTypes = {
+    data: PropTypes.array.isRequired,
+};
+
+export function ListCardServicios({ data }) {
+    return (
+        <Grid container spacing={3} sx={{ py: 2 }}>
+            {data.map((item) => (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.id_servicio}>
+                    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+
+                        <CardHeader
+                            title={item.nombre}
+                            sx={{
+                                backgroundColor: '#81D4FA',
+                                color: '#1B3A4B',
+                                py: 1,
+                                px: 1.5,
+                                minHeight: 48,
+                                textAlign: 'center',
+                                '& .MuiCardHeader-title': {
+                                    fontSize: '1.05rem',
+                                    fontWeight: 700,
+                                    lineHeight: 1.3
+                                }
+                            }}
+                        />
+
+                        {item.imagen_url ? (
+                            <CardMedia
+                                component="img"
+                                height="220"
+                                image={item.imagen_url}
+                                alt={item.nombre}
+                                sx={{ objectFit: 'contain', p: 2 }}
+                            />
+                        ) : (
+                            <Box
+                                sx={{
+                                    height: 220,
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    bgcolor: 'action.hover',
+                                }}
+                            >
+                                <Inventory2 sx={{ fontSize: 70, color: 'text.disabled' }} />
+                            </Box>
+                        )}
+
+                        <CardContent
+                            sx={{
+                                flexGrow: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                px: 2,
+                                py: 1.5,
+                            }}
+                        >
+
+                            <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{
+                                    fontSize: '0.8rem',
+                                    textAlign: 'left',
+                                    width: '100%',
+                                }}
+                            >
+                                {item.marca || 'No especificada'}
+                            </Typography>
+
+
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    fontSize: '0.8rem',
+                                    fontWeight: 600,
+                                    textAlign: 'right',
+                                    mt: 'auto',
+                                    pt: 2,
+                                }}
+                            >
+                                Precio: {new Intl.NumberFormat('es-CR', {
+                                    style: 'currency',
+                                    currency: 'CRC',
+                                    maximumFractionDigits: 0
+                                }).format(Number(item.precio))}
+                            </Typography>
+                        </CardContent>
+
+                        <CardActions
+                            sx={{
+                                backgroundColor: (theme) => theme.palette.action.focus,
+                            }}
+                        >
+                            <IconButton
+                                component={Link}
+                                to={`/servicios/${item.id_servicio}`}
+                                aria-label={`Ver detalle de ${item.nombre}`}
+                                sx={{ ml: 'auto' }}
+                            >
+                                <Info />
+                            </IconButton>
+                        </CardActions>
+                    </Card>
+                </Grid>
+            ))}
+        </Grid>
+    );
+}

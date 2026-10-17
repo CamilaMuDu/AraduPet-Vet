@@ -36,7 +36,7 @@ export function CatalogoProductos() {
 
     return (
         <Container sx={{ py: 4 }}>
-            <Typography variant="h4" component="h1" gutterBottom>
+            <Typography variant="h4" component="h1" gutterBottom color="primary" align='left'>
                 Catálogo de productos
             </Typography>
 

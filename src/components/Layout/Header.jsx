@@ -59,10 +59,10 @@ export default function Header() {
   ];
   //Lista enlaces menu principal
   const navItems = [
-    { name: "Productos", link: "/movie" },//Enlace página peliculas
-    { name: "Servicios", link: "/catalog-movies/" },//Enlace página catálogo de peliculas
-    { name: "Citas", link: "/movie-table/" },//Enlace página mantenimiento de peliculas
-    { name: "Factura", link: "/movie-table/" },//Enlace página mantenimiento de peliculas
+    { name: "Productos", link: "/productos" },//Enlace página peliculas
+    { name: "Servicios", link: "/servicios/" },//Enlace página catálogo de peliculas
+    { name: "Citas", link: "/citas" },//Enlace página mantenimiento de peliculas
+    { name: "Factura", link: "/facturas" },//Enlace página mantenimiento de peliculas
   ];
   //Identificador menu principal
   const menuIdPrincipal = "menu-appbar";//Identificador menu principal
@@ -76,7 +76,7 @@ export default function Header() {
               key={index}
               component={Link}
               to={item.link}
-              color="secondary"
+              color="primary"
             >
               <Typography textAlign="center">{item.name}</Typography>
             </Button>
@@ -218,13 +218,13 @@ export default function Header() {
             {menuPrincipalMobile}
           </Menu>
           {/* Enlace página inicio */}
-          <Tooltip title="AraduPet-Vet">
+          <Tooltip title="AraduPet-Vet Inicio">
             <IconButton
               size="large"
               edge="end"
               component="a"
               href="/"
-              aria-label="AraduPet-Vet"
+              aria-label="AraduPet-Vet Inicio"
               color="primary"
             >
               <PetsIcon />

@@ -24,22 +24,21 @@ export function ListCardProductos({ data }) {
                     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
 
                         <CardHeader
-                            sx={{
-                                backgroundColor: (theme) => theme.palette.secondary.main,
-                                color: (theme) => theme.palette.common.white,
-                                textAlign: 'center',
-                                py: 0.5,
-                                px: 1,
-                                minHeight: 38,
-                                '& .MuiCardHeader-title': {
-                                    fontSize: '0.85rem',
-                                    fontWeight: 500,
-                                    lineHeight: 1.2,
-                                },
-                            }}
                             title={item.nombre}
+                            sx={{
+                                backgroundColor: '#81D4FA',
+                                color: '#1B3A4B',
+                                py: 1,
+                                px: 1.5,
+                                minHeight: 48,
+                                textAlign: 'center',
+                                '& .MuiCardHeader-title': {
+                                    fontSize: '1.05rem',
+                                    fontWeight: 700,
+                                    lineHeight: 1.3
+                                }
+                            }}
                         />
-
 
                         {item.imagen_url ? (
                             <CardMedia
@@ -82,7 +81,7 @@ export function ListCardProductos({ data }) {
                                     width: '100%',
                                 }}
                             >
-                                Marca: {item.marca || 'No especificada'}
+                                {item.marca || 'No especificada'}
                             </Typography>
 
 
@@ -96,7 +95,11 @@ export function ListCardProductos({ data }) {
                                     pt: 2,
                                 }}
                             >
-                                Precio: {Number(item.precio).toFixed(2)}
+                                Precio: {new Intl.NumberFormat('es-CR', {
+                                    style: 'currency',
+                                    currency: 'CRC',
+                                    maximumFractionDigits: 0
+                                }).format(Number(item.precio))}
                             </Typography>
                         </CardContent>
 

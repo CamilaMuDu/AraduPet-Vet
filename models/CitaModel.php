@@ -11,6 +11,7 @@ class CitaModel
     }
 
     //getAll
+    
     public function all()
     {
         try {
@@ -22,15 +23,20 @@ class CitaModel
                         ec.nombre AS estado,
                         ec.color,
                         m.nombre AS mascota,
-                        s.nombre AS servicio
-                     FROM cita c
-                     INNER JOIN estado_cita ec
+                        s.nombre AS servicio,
+                        ud.nombre AS doctor
+                    FROM cita c
+                    INNER JOIN estado_cita ec
                         ON c.id_estado = ec.id_estado
-                     INNER JOIN mascota m
+                    INNER JOIN mascota m
                         ON c.id_mascota = m.id_mascota
-                     INNER JOIN servicio s
+                    INNER JOIN servicio s
                         ON c.id_servicio = s.id_servicio
-                     ORDER BY c.fecha_cita ASC, c.hora_inicio ASC";
+                    INNER JOIN doctor d
+                        ON c.id_doctor = d.id_doctor
+                    INNER JOIN usuario ud
+                        ON d.id_usuario = ud.id_usuario
+                    ORDER BY c.fecha_cita ASC, c.hora_inicio ASC";
 
             return $this->enlace->executeSQL($vSql);
 
@@ -38,6 +44,7 @@ class CitaModel
             handleException($e);
         }
     }
+
 
     //getById
     public function get($id)
