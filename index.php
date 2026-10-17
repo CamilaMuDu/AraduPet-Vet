@@ -28,6 +28,7 @@ require_once "models/MovieModel.php";
 
 require_once __DIR__ . "/models/ProductoModel.php";
 require_once "models/FacturaModel.php";
+require_once "models/CitaModel.php";
 
 
 /***--- Agregar todos los controladores*/
@@ -37,6 +38,7 @@ require_once "controllers/MovieController.php";
 
 require_once __DIR__ . "/controllers/ProductoController.php";
 require_once "controllers/FacturaController.php";
+require_once "controllers/CitaController.php";
 
 
 //Enrutador
