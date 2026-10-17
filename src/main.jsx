@@ -11,6 +11,7 @@ import { ListMovies } from "./components/Movie/listMovies.jsx";
 import { DetailMovie } from "./components/Movie/detailMovie.jsx";
 import { CatalogMovies } from "./components/Movie/catalogoMovies.jsx";
 import Layout from './components/Layout/Layout';
+import { CatalogoProductos } from "./components/Producto/CatalogoProductos.jsx";
 
 
 const rutas = createBrowserRouter([
@@ -23,6 +24,10 @@ const rutas = createBrowserRouter([
           {
             path: '/',
             element: <Home />,
+          },
+          {
+            path: '/productos',
+            element: <CatalogoProductos />,
           },
           {
             path: '/catalog-movies/',

@@ -12,15 +12,16 @@ class ProductoModel
     //getAll
     public function all()
     {
-        try {
+        try {         
             $vSql = "SELECT
                         p.id_producto,
                         p.nombre,
                         p.precio,
+                        p.marca,
                         p.imagen_url
-                     FROM producto p
-                     WHERE p.estado = 1
-                     ORDER BY p.nombre ASC";
+                    FROM producto p
+                    WHERE p.estado = 1
+                    ORDER BY p.nombre ASC";
 
             $vResultado = $this->enlace->executeSQL($vSql);
 

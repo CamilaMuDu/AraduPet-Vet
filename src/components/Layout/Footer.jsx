@@ -12,6 +12,10 @@ function Footer() {
       }}
     >
       <Container maxWidth="lg">
+        <Typography variant="body2" align="left" sx={{ mb: 2, pl: 2 }}>
+          Diseñado por: Jorhan Vega Carvajal y Camila Muñoz Durán
+        </Typography>
+
         <Typography variant="body1" align="center">
           AraduPetVet - Gestión Veterinaria
         </Typography>

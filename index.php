@@ -21,21 +21,12 @@ require_once "controllers/core/Response.php";
 require_once "middleware/AuthMiddleware.php";
 
 /***--- Agregar todos los modelos*/
-require_once "models/DirectorModel.php";
-require_once "models/GenreModel.php";
-require_once "models/ImageModel.php";
-require_once "models/MovieModel.php";
-
 require_once __DIR__ . "/models/ProductoModel.php";
 require_once "models/FacturaModel.php";
 require_once "models/CitaModel.php";
 
 
 /***--- Agregar todos los controladores*/
-require_once "controllers/DirectorController.php";
-require_once "controllers/GenreController.php";
-require_once "controllers/MovieController.php";
-
 require_once __DIR__ . "/controllers/ProductoController.php";
 require_once "controllers/FacturaController.php";
 require_once "controllers/CitaController.php";

@@ -15,6 +15,7 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import MoreIcon from "@mui/icons-material/MoreVert";
 import LiveTvIcon from "@mui/icons-material/LiveTv";
 import Tooltip from "@mui/material/Tooltip";
+import PetsIcon from "@mui/icons-material/Pets";
 
 export default function Header() {
   //Gestión menu usuario
@@ -58,9 +59,10 @@ export default function Header() {
   ];
   //Lista enlaces menu principal
   const navItems = [
-    { name: "Peliculas", link: "/movie" },//Enlace página peliculas
-    { name: "Cátalogo de Peliculas", link: "/catalog-movies/" },//Enlace página catálogo de peliculas
-    { name: "Mantenimiento Peliculas", link: "/movie-table/" },//Enlace página mantenimiento de peliculas
+    { name: "Productos", link: "/movie" },//Enlace página peliculas
+    { name: "Servicios", link: "/catalog-movies/" },//Enlace página catálogo de peliculas
+    { name: "Citas", link: "/movie-table/" },//Enlace página mantenimiento de peliculas
+    { name: "Factura", link: "/movie-table/" },//Enlace página mantenimiento de peliculas
   ];
   //Identificador menu principal
   const menuIdPrincipal = "menu-appbar";//Identificador menu principal
@@ -216,16 +218,16 @@ export default function Header() {
             {menuPrincipalMobile}
           </Menu>
           {/* Enlace página inicio */}
-          <Tooltip title="Alquiler peliculas">
+          <Tooltip title="AraduPet-Vet">
             <IconButton
               size="large"
               edge="end"
               component="a"
               href="/"
-              aria-label="Alquiler peliculas"
+              aria-label="AraduPet-Vet"
               color="primary"
             >
-              <LiveTvIcon />
+              <PetsIcon />
             </IconButton>
           </Tooltip>
           {/* Enlace página inicio */}
