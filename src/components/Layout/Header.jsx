@@ -16,83 +16,137 @@ import MoreIcon from "@mui/icons-material/MoreVert";
 import LiveTvIcon from "@mui/icons-material/LiveTv";
 import Tooltip from "@mui/material/Tooltip";
 import PetsIcon from "@mui/icons-material/Pets";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 
 export default function Header() {
-  //Gestión menu usuario
+
   const [anchorElUser, setAnchorEl] = React.useState(null);
-  //Gestión menu opciones
+
   const [mobileOpcionesAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
-  //Booleano Menu opciones responsivo
+
   const isMobileOpcionesMenuOpen = Boolean(mobileOpcionesAnchorEl);
-  //Gestión menu principal
+
   const [anchorElPrincipal, setAnchorElPrincipal] = React.useState(null);
-  //Abierto menu usuario
+
+  const [anchorElMantenimientos, setAnchorElMantenimientos] = React.useState(null);
+
+  const handleOpenMantenimientos = (event) => {
+    setAnchorElMantenimientos(event.currentTarget);
+  };
+
+  const handleCloseMantenimientos = () => {
+    setAnchorElMantenimientos(null);
+  };
+
+
   const handleUserMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
-  //Cerrado menu usuario
+
   const handleUserMenuClose = () => {
     setAnchorEl(null);
     handleOpcionesMenuClose();
   };
-  //Abierto menu principal
+
   const handleOpenPrincipalMenu = (event) => {
     setAnchorElPrincipal(event.currentTarget);
   };
-  //Cerrado menu principal
+
   const handleClosePrincipalMenu = () => {
     setAnchorElPrincipal(null);
   };
-  //Abierto menu opciones
+
   const handleOpcionesMenuOpen = (event) => {
     setMobileMoreAnchorEl(event.currentTarget);
   };
-  //Cerrado menu opciones
+
   const handleOpcionesMenuClose = () => {
     setMobileMoreAnchorEl(null);
   };
-  //Lista enlaces menu usuario
+
   const userItems = [
     { name: "Login", link: "/user/login", login: false },
     { name: "Registrarse", link: "/user/create", login: false },
     { name: "Logout", link: "/user/logout", login: true },
   ];
-  //Lista enlaces menu principal
+
   const navItems = [
-    { name: "Productos", link: "/productos" },//Enlace página peliculas
-    { name: "Servicios", link: "/servicios/" },//Enlace página catálogo de peliculas
-    { name: "Citas", link: "/citas" },//Enlace página mantenimiento de peliculas
-    { name: "Factura", link: "/facturas" },//Enlace página mantenimiento de peliculas
+    { name: "Productos", link: "/productos" },
+    { name: "Servicios", link: "/servicios/" },
+    { name: "Citas", link: "/citas" },
+    { name: "Factura", link: "/facturas" },
   ];
-  //Identificador menu principal
-  const menuIdPrincipal = "menu-appbar";//Identificador menu principal
-  //Menu Principal
+
+  const mantenimientoItems = [
+    { name: "Productos", link: "/productos/mantenimiento" },
+    { name: "Servicios", link: "#" },
+    { name: "Sucursal", link: "#" },
+    { name: "Horarios", link: "#" },
+  ];
+
+  const menuIdPrincipal = "menu-appbar";
+
   const menuPrincipal = (
-    <Box sx={{ display: { xs: "none", sm: "block" } }}>
-      {navItems &&
-        navItems.map((item, index) => {
-          return (
-            <Button
-              key={index}
-              component={Link}
-              to={item.link}
-              color="primary"
-            >
-              <Typography textAlign="center">{item.name}</Typography>
-            </Button>
-          );
-        })}
+    <Box sx={{ display: { xs: "none", sm: "flex" }, alignItems: "center" }}>
+      {navItems.slice(0, 2).map((item, index) => (
+        <Button
+          key={index}
+          component={Link}
+          to={item.link}
+          color="primary"
+        >
+          <Typography sx={{ textAlign: "center" }}>
+            {item.name}
+          </Typography>
+        </Button>
+      ))}
+
+      <Button
+        color="primary"
+        onClick={handleOpenMantenimientos}
+        endIcon={<ArrowDropDownIcon />}
+      >
+        <Typography textAlign="center">Mantenimientos</Typography>
+      </Button>
+
+      <Menu
+        anchorEl={anchorElMantenimientos}
+        open={Boolean(anchorElMantenimientos)}
+        onClose={handleCloseMantenimientos}
+      >
+        {mantenimientoItems.map((item) => (
+          <MenuItem
+            key={item.name}
+            component={item.link !== "#" ? Link : "li"}
+            to={item.link !== "#" ? item.link : undefined}
+            disabled={item.link === "#"}
+            onClick={handleCloseMantenimientos}
+          >
+            {item.name}
+          </MenuItem>
+        ))}
+      </Menu>
+
+      {navItems.slice(2).map((item, index) => (
+        <Button
+          key={index}
+          component={Link}
+          to={item.link}
+          color="primary"
+        >
+          <Typography textAlign="center">{item.name}</Typography>
+        </Button>
+      ))}
     </Box>
   );
-  //Menu Principal responsivo
+
   const menuPrincipalMobile = navItems.map((page, index) => (
     <MenuItem key={index} component={Link} to={page.link}>
       <Typography sx={{ textAlign: "center" }}>{page.name}</Typography>
     </MenuItem>
   ));
-  //Identificador menu usuario
+
   const userMenuId = "user-menu";
-  //Menu Usuario
   const userMenu = (
     <Box sx={{ flexGrow: 0 }}>
       <IconButton
@@ -141,9 +195,9 @@ export default function Header() {
       </Menu>
     </Box>
   );
-  //Identificador menu opciones
+
   const menuOpcionesId = "badge-menu-mobile";
-  //Menu opciones responsivo
+
   const menuOpcionesMobile = (
     <Menu
       anchorEl={mobileOpcionesAnchorEl}
@@ -160,11 +214,10 @@ export default function Header() {
       open={isMobileOpcionesMenuOpen}
       onClose={handleOpcionesMenuClose}
     >
-      {/* Enlaces menu opciones responsivo */}
       <MenuItem>
         <IconButton size="large" color="inherit">
           <Badge badgeContent={4}
-          color="primary">
+            color="primary">
             <ShoppingCartIcon />
           </Badge>
         </IconButton>
@@ -217,7 +270,7 @@ export default function Header() {
           >
             {menuPrincipalMobile}
           </Menu>
-          {/* Enlace página inicio */}
+
           <Tooltip title="AraduPet-Vet Inicio">
             <IconButton
               size="large"
@@ -230,7 +283,7 @@ export default function Header() {
               <PetsIcon />
             </IconButton>
           </Tooltip>
-          {/* Enlace página inicio */}
+
           {menuPrincipal}
           <Box sx={{ flexGrow: 1 }} />
           <Box sx={{ display: { xs: "none", md: "flex" } }}>

@@ -117,4 +117,26 @@ class MySqlConnect {
 			handleException($e);
 		}
 	}
+
+
+	/**
+ * Escapar caracteres especiales para consultas SQL
+ */
+public function escapeString($valor)
+{
+    try {
+        $this->connect();
+
+        $this->link->set_charset("utf8mb4");
+
+        $valorSeguro = $this->link->real_escape_string($valor);
+
+        $this->link->close();
+
+        return $valorSeguro;
+
+    } catch (Exception $e) {
+        handleException($e);
+    }
+}
 }

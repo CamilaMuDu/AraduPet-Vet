@@ -129,7 +129,7 @@ class ProductoModel
             $descripcionSQL = $this->escapar($descripcion);
             $marcaSQL = $this->escapar($marca);
             $presentacionSQL = $this->escapar($presentacion);
-            $imagenUrlSQL = $imagenURL === '' ? 'NULL' : "'" . $this->escapar($imagenUrl) . "'";
+            $imagenSQL = $imagenUrl === '' ? 'NULL' : "'" . $this->escapar($imagenUrl) . "'";
             $precio = number_format(floatval($precioTexto), 2, '.', '');
             $stock =(int)$stockTexto;
 
@@ -155,8 +155,7 @@ class ProductoModel
                         1
                     )";
 
-            $vResultado = $this->enlace->executeSQL($vSql, $data);
-
+            $vResultado = $this->enlace->executeSQL_DML_last($vsql);
 
             return [
                 'success' => true,
@@ -174,7 +173,7 @@ class ProductoModel
     }
 
     //Modificar producto 
-    public function upadate($id, $data) 
+    public function update($id, $data) 
     {
         try {
             $id = filter_var($id, FILTER_VALIDATE_INT);
@@ -233,7 +232,7 @@ class ProductoModel
                         presentacion = " . ($presentacion === '' ? 'NULL' : "'$presentacionSQL'") . "
                     WHERE id_producto = $id";
 
-            $vResultado = $this->enlace->executeSQL($vSql, $data);
+            $vResultado = $this->enlace->executeSQL_DML($vsql);
             return [
                 'success' => true,
                 'message' => 'Producto actualizado correctamente',

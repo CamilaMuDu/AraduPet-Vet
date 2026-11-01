@@ -13,10 +13,12 @@ import { CatalogMovies } from "./components/Movie/catalogoMovies.jsx";
 import Layout from './components/Layout/Layout';
 import { CatalogoProductos } from "./components/Producto/CatalogoProductos.jsx";
 import { DetalleProducto } from './components/Producto/DetalleProducto.jsx';
+import { ProductoMantenimiento } from "./components/Producto/ProductoMantenimiento.jsx";
 import Citas from "./components/Citas/Citas.jsx";
 import { ListaFacturas } from './components/Factura/ListaFacturas.jsx';
 import { DetalleFactura } from './components/Factura/DetalleFactura.jsx';
 import DetalleCita from './components/Citas/DetalleCita';
+import { ListaMantenimientoProductos } from './components/Producto/ListaMantenimientoProductos.jsx';
 
 
 const rutas = createBrowserRouter([
@@ -43,8 +45,20 @@ const rutas = createBrowserRouter([
             element: <CatalogoProductos />,
           },
           {
+            path: '/productos/mantenimiento',
+            element: <ListaMantenimientoProductos />,
+          },
+          {
+            path: '/productos/crear',
+            element: <ProductoMantenimiento />,
+          },
+          {
+            path: '/productos/editar/:id',
+            element: <ProductoMantenimiento />,
+          },
+          {
             path: '/productos/:id',
-            element: <DetalleProducto />
+            element: <DetalleProducto />,
           },
           {
             path: '/facturas',

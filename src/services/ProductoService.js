@@ -10,6 +10,18 @@ class ProductoService {
   getProductoById(productoId) {
     return axios.get(BASE_URL + '/get/' + productoId);
   }
+
+  getCategorias() {
+    return axios.get(BASE_URL + '/categorias');
+  }
+
+  createProducto(producto) {
+    return axios.post(BASE_URL + '/create', producto);
+  }
+
+  updateProducto(productoId, producto) {
+    return axios.put(BASE_URL + '/update/' + productoId, producto);
+  }
 }
 
 export default new ProductoService();
