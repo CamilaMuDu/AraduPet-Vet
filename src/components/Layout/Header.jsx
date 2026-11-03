@@ -79,9 +79,9 @@ export default function Header() {
 
   const mantenimientoItems = [
     { name: "Productos", link: "/productos/mantenimiento" },
-    { name: "Servicios", link: "#" },
-    { name: "Sucursal", link: "#" },
-    { name: "Horarios", link: "#" },
+    { name: "Servicios", link: "/servicios/mantenimiento" },
+    { name: "Veterinarios", link: "/veterinarios/mantenimiento" },
+    { name: "Horarios", link: "/horarios/mantenimiento" },
   ];
 
   const menuIdPrincipal = "menu-appbar";

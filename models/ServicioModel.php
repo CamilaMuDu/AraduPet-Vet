@@ -1,58 +1,108 @@
 <?php
+
 class ServicioModel
 {
-    public $enlace;
+    private $db;
+
     public function __construct()
     {
-        $this->enlace = new MySqlConnect();
+        $this->db = new MySqlConnect();
     }
-    /*Listar */
-    public function all(){
-        try {
-            //Consulta sql
-			$vSql = "SELECT * FROM servicio;";
-			
-            //Ejecutar la consulta
-			$vResultado = $this->enlace->ExecuteSQL ($vSql);
-				
-			// Retornar el objeto
-			return $vResultado;
-		} catch (Exception $e) {
-            handleException($e);
-        }
-    }
-    /*Obtener */
-    public function get($id)
+
+    
+    public function getAll()
     {
         try {
-            //Consulta sql
-			$vSql = "SELECT * FROM servicio where id_servicio=$id";
-			
-            //Ejecutar la consulta
-			$vResultado = $this->enlace->ExecuteSQL ( $vSql);
-			// Retornar el objeto
-			return $vResultado[0];
-		} catch (Exception $e) {
-            handleException($e);
+            $sql = "SELECT id_servicio, nombre, descripcion, precio, duracion_minutos, requiere_ayuno, requiere_cita_previa, estado 
+                    FROM servicio 
+                    WHERE estado = 1";
+
+            $result = $this->db->executeSelect($sql);
+            return $result;
+        } catch (Exception $e) {
+            HandleException::logException($e);
+            return false;
         }
     }
-    /*Obtener los actores de una pelicula */
-    // public function getActorMovie($idMovie)
-    // {
-    //     try {
-    //         //Consulta SQL
-    //         $vSQL = "SELECT g.id, g.fname, g.lname, mg.role".
-    //         " FROM actor g, movie_cast mg".
-    //         " where g.id=mg.actor_id and mg.movie_id=$idMovie;";
-    //         //Establecer conexión
-            
-    //         //Ejecutar la consulta
-    //         $vResultado = $this->enlace->executeSQL($vSQL);
-    //         //Retornar el resultado
-    //         return $vResultado;
-    //     } catch (Exception $e) {
-    //         handleException($e);
-    //     }
-    // }
-    
+
+    public function getById($id)
+    {
+        try {
+            $sql = "SELECT id_servicio, nombre, descripcion, precio, duracion_minutos, requiere_ayuno, requiere_cita_previa, estado 
+                    FROM servicio 
+                    WHERE id_servicio = :id AND estado = 1";
+
+            $params = [':id' => $id];
+            $result = $this->db->executeSelect($sql, $params);
+
+            return !empty($result) ? $result[0] : null;
+        } catch (Exception $e) {
+            HandleException::logException($e);
+            return false;
+        }
+    }
+
+    public function create($data)
+    {
+        try {
+            $sql = "INSERT INTO servicio (nombre, descripcion, precio, duracion_minutos, requiere_ayuno, requiere_cita_previa, estado) 
+                    VALUES (:nombre, :descripcion, :precio, :duracion_minutos, :requiere_ayuno, :requiere_cita_previa, 1)";
+
+            $params = [
+                ':nombre'               => $data->nombre,
+                ':descripcion'          => $data->descripcion,
+                ':precio'               => $data->precio,
+                ':duracion_minutos'     => $data->duracion_minutos,
+                ':requiere_ayuno'       => $data->requiere_ayuno ?? 0,
+                ':requiere_cita_previa' => $data->requiere_cita_previa ?? 1
+            ];
+
+            return $this->db->executeInsert($sql, $params);
+        } catch (Exception $e) {
+            HandleException::logException($e);
+            return false;
+        }
+    }
+
+    public function update($id, $data)
+    {
+        try {
+            $sql = "UPDATE servicio 
+                    SET nombre = :nombre, 
+                        descripcion = :descripcion, 
+                        precio = :precio, 
+                        duracion_minutos = :duracion_minutos, 
+                        requiere_ayuno = :requiere_ayuno, 
+                        requiere_cita_previa = :requiere_cita_previa 
+                    WHERE id_servicio = :id";
+
+            $params = [
+                ':id'                   => $id,
+                ':nombre'               => $data->nombre,
+                ':descripcion'          => $data->descripcion,
+                ':precio'               => $data->precio,
+                ':duracion_minutos'     => $data->duracion_minutos,
+                ':requiere_ayuno'       => $data->requiere_ayuno,
+                ':requiere_cita_previa' => $data->requiere_cita_previa
+            ];
+
+            return $this->db->executeRow($sql, $params);
+        } catch (Exception $e) {
+            HandleException::logException($e);
+            return false;
+        }
+    }
+
+    public function delete($id)
+    {
+        try {
+            $sql = "UPDATE servicio SET estado = 0 WHERE id_servicio = :id";
+            $params = [':id' => $id];
+
+            return $this->db->executeRow($sql, $params);
+        } catch (Exception $e) {
+            HandleException::logException($e);
+            return false;
+        }
+    }
 }

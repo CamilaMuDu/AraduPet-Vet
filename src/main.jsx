@@ -19,6 +19,8 @@ import { ListaFacturas } from './components/Factura/ListaFacturas.jsx';
 import { DetalleFactura } from './components/Factura/DetalleFactura.jsx';
 import DetalleCita from './components/Citas/DetalleCita';
 import { ListaMantenimientoProductos } from './components/Producto/ListaMantenimientoProductos.jsx';
+import { ListServicios } from './components/Servicios/ListServicios.jsx';
+
 
 
 const rutas = createBrowserRouter([
@@ -59,6 +61,10 @@ const rutas = createBrowserRouter([
           {
             path: '/productos/:id',
             element: <DetalleProducto />,
+          },
+          {
+            path: '/Servicios/mantenimiento',
+            element: <ListServicios />,
           },
           {
             path: '/facturas',
