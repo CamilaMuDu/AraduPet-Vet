@@ -20,6 +20,8 @@ import { DetalleFactura } from './components/Factura/DetalleFactura.jsx';
 import DetalleCita from './components/Citas/DetalleCita';
 import { ListaMantenimientoProductos } from './components/Producto/ListaMantenimientoProductos.jsx';
 import { ListServicios } from './components/Servicios/ListServicios.jsx';
+import { ListaMantenimientoDoctores } from './components/Doctor/ListaMantenimientoDoctores';
+import { DoctorMantenimiento } from './components/Doctor/DoctorMantenimiento.jsx';
 
 
 
@@ -73,6 +75,18 @@ const rutas = createBrowserRouter([
           {
             path: '/facturas/:id',
             element: <DetalleFactura />,
+          },
+          {
+            path: '/veterinarios/mantenimiento',
+            element: <ListaMantenimientoDoctores />,
+          },
+          {
+            path: '/doctores/crear',
+            element: <DoctorMantenimiento />,
+          },
+          {
+            path: '/doctores/editar/:id',
+            element: <DoctorMantenimiento />,
           },
           {
             path: '/catalog-movies/',

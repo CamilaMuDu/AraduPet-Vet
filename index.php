@@ -25,6 +25,7 @@ require_once __DIR__ . "/models/ProductoModel.php";
 require_once __DIR__ . "/models/ServicioModel.php";
 require_once "models/FacturaModel.php";
 require_once "models/CitaModel.php";
+require_once __DIR__ . "/models/DoctorModel.php";
 
 
 /***--- Agregar todos los controladores*/
@@ -32,6 +33,7 @@ require_once __DIR__ . "/controllers/ProductoController.php";
 require_once __DIR__ . "/controllers/ServicioController.php";
 require_once "controllers/FacturaController.php";
 require_once "controllers/CitaController.php";
+require_once __DIR__ . "/controllers/DoctorController.php";
 
 
 //Enrutador

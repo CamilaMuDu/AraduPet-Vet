@@ -106,7 +106,7 @@ export default function Header() {
         onClick={handleOpenMantenimientos}
         endIcon={<ArrowDropDownIcon />}
       >
-        <Typography textAlign="center">Mantenimientos</Typography>
+        <Typography sx={{ textAlign: 'center' }}>Mantenimientos</Typography>
       </Button>
 
       <Menu
@@ -134,7 +134,7 @@ export default function Header() {
           to={item.link}
           color="primary"
         >
-          <Typography textAlign="center">{item.name}</Typography>
+          <Typography sx={{ textAlign: 'center' }}>{item.name}</Typography>
         </Button>
       ))}
     </Box>

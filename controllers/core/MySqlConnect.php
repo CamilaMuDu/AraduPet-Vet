@@ -9,6 +9,7 @@ class MySqlConnect {
 	private $host;
 	private $dbname;
 	private $link;
+	private $inTransaction = false;
 
 	private $log;
 	
@@ -26,13 +27,41 @@ class MySqlConnect {
 	 */
 	public function connect() {
 		try {
-			$this->link = new mysqli ( $this->host, $this->username, $this->password, $this->dbname );
-			
-		} catch ( Exception $e ) {
+			if (!$this->inTransaction) {
+				$this->link = new mysqli(
+					$this->host,
+					$this->username,
+					$this->password,
+					$this->dbname
+				);
+
+				$this->link->set_charset("utf8mb4");
+			}
+		} catch (Exception $e) {
 			handleException($e);
 		}
 	}
-	/**
+
+		public function beginTransaction() {
+		$this->connect();
+		$this->link->begin_transaction();
+		$this->inTransaction = true;
+	}
+
+	public function commit() {
+		$this->link->commit();
+		$this->inTransaction = false;
+		$this->link->close();
+	}
+
+	public function rollback() {
+		if ($this->inTransaction) {
+			$this->link->rollback();
+			$this->inTransaction = false;
+			$this->link->close();
+		}
+	}
+		/**
 	 * Ejecutar una setencia SQL tipo SELECT
 	 * @param $sql - string sentencia SQL
 	 * @param $resultType - tipo de formato del resultado (obj,asoc,num)
@@ -67,7 +96,9 @@ class MySqlConnect {
 				handleException($this->link->error);
 				throw new \Exception('Error: Falló la ejecución de la sentencia'.$this->link->errno.' '.$this->link->error);
 			}
-			$this->link->close();
+			if (!$this->inTransaction) {
+				$this->link->close();
+			}
 			return $lista;
 		} catch ( Exception $e ) {
 			handleException($e);
@@ -87,7 +118,9 @@ class MySqlConnect {
 			if ($result = $this->link->query ( $sql )) {
 				$num_results = mysqli_affected_rows ( $this->link );
 			}
-			$this->link->close ();
+			if (!$this->inTransaction) {
+				$this->link->close();
+			}
 			return $num_results;
 		} catch ( Exception $e ) {
 			/* $this->log->error("File: ".$e->getFile()." - line: ".$e->getLine()." - Code: ".$e->getCode()." - Message: ".$e->getMessage());
@@ -111,7 +144,9 @@ class MySqlConnect {
 				
 			}
 			
-			$this->link->close ();
+			if (!$this->inTransaction) {
+				$this->link->close();
+			}
 			return $num_results;
 		} catch ( Exception $e ) {
 			handleException($e);
@@ -131,10 +166,11 @@ public function escapeString($valor)
 
         $valorSeguro = $this->link->real_escape_string($valor);
 
-        $this->link->close();
-
+        if (!$this->inTransaction) {
+			$this->link->close();
+		}
         return $valorSeguro;
-
+		
     } catch (Exception $e) {
         handleException($e);
     }

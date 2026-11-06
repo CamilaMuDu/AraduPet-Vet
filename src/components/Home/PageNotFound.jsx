@@ -10,7 +10,7 @@ function PageNotFound() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        textAlign: 'center',
+        lign: 'center',
         minHeight: '60vh',
       }}
     >

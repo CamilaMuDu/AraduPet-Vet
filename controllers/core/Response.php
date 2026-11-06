@@ -19,10 +19,7 @@ class Response
             $this->status =400;
             $json =  $message ?? "No se efectuo la solicitud";
         }
-        //Escribir respuesta JSON con código de estado HTTP
-        echo json_encode(
-            $json,
-            http_response_code($this->status)
-        );
+        http_response_code($this->status);
+        echo json_encode($json);    
     }
 }

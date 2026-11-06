@@ -11,8 +11,9 @@ class DoctorController
             $result = $doctorModel->getAll();
 
             $response->toJSON($result);
-        }catch (Exception $e) {
-            HandleException($e);
+        }catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
         }
     }
 
@@ -22,15 +23,16 @@ class DoctorController
         try{
             $response = new Response();
             $doctorModel = new DoctorModel();
-            $result = $doctorModel->getById($id);
+            $result = $doctorModel->get($id);
 
             if ($result) {
                 $response->toJSON($result);
             } else {
-                $response->toJSON(['message' => 'Veterinario no encontrado'], 404);
+                $response->status(404)->toJSON([], 'Veterinario no encontrado');
             }
-        } catch (Exception $e) {
-            HandleException($e);
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
         }
     }
 
@@ -49,8 +51,9 @@ class DoctorController
 
             $response = new Response();
             $response ->toJSON($result);
-        } catch (Exception $e) {
-            HandleException($e);
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
         }
     }
 
@@ -69,8 +72,25 @@ class DoctorController
 
             $response = new Response();
             $response ->toJSON($result);
-        } catch (Exception $e) {
-            HandleException($e);
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
+        }
+    }
+
+        // Eliminar veterinario
+    public function delete($id)
+    {
+        try {
+            $doctorModel = new DoctorModel();
+            $resultado = $doctorModel->delete($id);
+
+            $response = new Response();
+            $response->toJSON($resultado);
+
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
         }
     }
 }
