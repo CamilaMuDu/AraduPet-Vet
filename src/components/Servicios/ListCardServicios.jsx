@@ -1,125 +1,117 @@
 import React from 'react';
-import Card from '@mui/material/Card';
-import CardHeader from '@mui/material/CardHeader';
-import CardMedia from '@mui/material/CardMedia';
-import CardContent from '@mui/material/CardContent';
-import CardActions from '@mui/material/CardActions';
-import Grid from '@mui/material/Grid';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import Box from '@mui/material/Box';
-import { Link } from 'react-router-dom';
-import { Info, Inventory2 } from '@mui/icons-material';
-import PropTypes from 'prop-types';
+import { Card, CardContent, Typography, Box, IconButton } from '@mui/material';
+import InfoIcon from '@mui/icons-material/Info';
+import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
+import { useNavigate } from 'react-router-dom';
 
-ListCardServicios.propTypes = {
-    data: PropTypes.array.isRequired,
-};
+export const ListCardServicios = ({ servicio }) => {
+    const navigate = useNavigate();
 
-export function ListCardServicios({ data }) {
     return (
-        <Grid container spacing={3} sx={{ py: 2 }}>
-            {data.map((item) => (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.id_servicio}>
-                    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Card 
+            elevation={3} 
+            sx={{ 
+                height: 350, 
+                display: 'flex', 
+                flexDirection: 'column', 
+                justifyContent: 'space-between',
+                borderRadius: 1,
+                overflow: 'hidden'
+            }}
+        >
+            {/* Encabezado azul claro */}
+            <Box 
+                sx={{ 
+                    backgroundColor: '#81d4fa', 
+                    color: '#01579b', 
+                    p: 1.5, 
+                    textAlign: 'center',
+                    height: 50,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }}
+            >
+                <Typography 
+                    variant="h6" 
+                    component="div" 
+                    sx={{ 
+                        fontWeight: 'bold', 
+                        fontSize: '1rem',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                    }}
+                >
+                    {servicio.nombre}
+                </Typography>
+            </Box>
 
-                        <CardHeader
-                            title={item.nombre}
-                            sx={{
-                                backgroundColor: '#81D4FA',
-                                color: '#1B3A4B',
-                                py: 1,
-                                px: 1.5,
-                                minHeight: 48,
-                                textAlign: 'center',
-                                '& .MuiCardHeader-title': {
-                                    fontSize: '1.05rem',
-                                    fontWeight: 700,
-                                    lineHeight: 1.3
-                                }
-                            }}
-                        />
+            {/* Imagen / Icono del servicio */}
+            <Box 
+                sx={{ 
+                    height: 140, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    backgroundColor: '#fafafa',
+                    py: 1
+                }}
+            >
+                {servicio.imagen_url ? (
+                    <img 
+                        src={servicio.imagen_url} 
+                        alt={servicio.nombre} 
+                        style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} 
+                    />
+                ) : (
+                    <MedicalServicesIcon sx={{ fontSize: 60, color: '#bdbdbd' }} />
+                )}
+            </Box>
 
-                        {item.imagen_url ? (
-                            <CardMedia
-                                component="img"
-                                height="220"
-                                image={item.imagen_url}
-                                alt={item.nombre}
-                                sx={{ objectFit: 'contain', p: 2 }}
-                            />
-                        ) : (
-                            <Box
-                                sx={{
-                                    height: 220,
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    bgcolor: 'action.hover',
-                                }}
-                            >
-                                <Inventory2 sx={{ fontSize: 70, color: 'text.disabled' }} />
-                            </Box>
-                        )}
+            {/* Contenido: Descripción y Precio alineado a la derecha */}
+            <CardContent sx={{ pt: 1, pb: 1, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <Typography 
+                    variant="body2" 
+                    color="text.secondary" 
+                    sx={{ 
+                        display: '-webkit-box', 
+                        WebkitLineClamp: 2, 
+                        WebkitBoxOrient: 'vertical', 
+                        overflow: 'hidden',
+                        height: 40,
+                        fontSize: '0.85rem'
+                    }}
+                >
+                    {servicio.descripcion}
+                </Typography>
 
-                        <CardContent
-                            sx={{
-                                flexGrow: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                px: 2,
-                                py: 1.5,
-                            }}
-                        >
+                {/* Caja del precio alineada totalmente a la derecha */}
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', mt: 1 }}>
+                    <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#000000', fontSize: '0.95rem', textAlign: 'right' }}>
+                        Precio: ₡{parseFloat(servicio.precio).toLocaleString('es-CR', { minimumFractionDigits: 0 })}
+                    </Typography>
+                </Box>
+            </CardContent>
 
-                            <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{
-                                    fontSize: '0.8rem',
-                                    textAlign: 'left',
-                                    width: '100%',
-                                }}
-                            >
-                                {item.marca || 'No especificada'}
-                            </Typography>
-
-
-                            <Typography
-                                variant="body2"
-                                sx={{
-                                    fontSize: '0.8rem',
-                                    fontWeight: 600,
-                                    textAlign: 'right',
-                                    mt: 'auto',
-                                    pt: 2,
-                                }}
-                            >
-                                Precio: {new Intl.NumberFormat('es-CR', {
-                                    style: 'currency',
-                                    currency: 'CRC',
-                                    maximumFractionDigits: 0
-                                }).format(Number(item.precio))}
-                            </Typography>
-                        </CardContent>
-
-                        <CardActions
-                            sx={{
-                                backgroundColor: (theme) => theme.palette.action.focus,
-                            }}
-                        >
-                            <IconButton
-                                component={Link}
-                                to={`/servicios/${item.id_servicio}`}
-                                aria-label={`Ver detalle de ${item.nombre}`}
-                                sx={{ ml: 'auto' }}
-                            >
-                                <Info />
-                            </IconButton>
-                        </CardActions>
-                    </Card>
-                </Grid>
-            ))}
-        </Grid>
+            {/* Pie de tarjeta con icono (i) */}
+            <Box 
+                sx={{ 
+                    backgroundColor: '#e0e0e0', 
+                    display: 'flex', 
+                    justifyContent: 'flex-end', 
+                    px: 1, 
+                    py: 0.5 
+                }}
+            >
+                <IconButton 
+                    size="small" 
+                    onClick={() => navigate(`/servicios/${servicio.id_servicio}`)}
+                    title="Ver detalle del servicio"
+                >
+                    <InfoIcon sx={{ color: '#616161', fontSize: 20 }} />
+                </IconButton>
+            </Box>
+        </Card>
     );
-}
+};

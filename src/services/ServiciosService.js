@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_BASE_URL + 'servicio';
+//const BASE_URL = import.meta.env.VITE_BASE_URL + 'servicio';
+//    || 'http://localhost:81/AraduPetVet/AraduPetVetFrontend'
+const BASE_URL = import.meta.env.VITE_BASE_URL  + 'servicio';
 
 class ServiciosService {
     // Obtener todos los servicios (llama al método index() del controlador)

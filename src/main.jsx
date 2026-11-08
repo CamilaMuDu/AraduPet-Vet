@@ -22,6 +22,9 @@ import { ListaMantenimientoProductos } from './components/Producto/ListaMantenim
 import { ListServicios } from './components/Servicios/ListServicios.jsx';
 import { ListaMantenimientoDoctores } from './components/Doctor/ListaMantenimientoDoctores';
 import { DoctorMantenimiento } from './components/Doctor/DoctorMantenimiento.jsx';
+import { ListaMantenimientoHorarios } from './components/Doctor/ListaMantenimientoHorarios.jsx';
+import { CatalogoServicios } from './components/Servicios/CatalogoServicios.jsx';
+import { DetalleServicio } from './components/Servicios/DetalleServicio.jsx';
 
 
 
@@ -65,8 +68,20 @@ const rutas = createBrowserRouter([
             element: <DetalleProducto />,
           },
           {
+            path: '/servicios',
+            element: <CatalogoServicios />,
+          },
+          {
+            path: '/servicios/:id',
+            element: <DetalleServicio />,
+          },
+          {
             path: '/Servicios/mantenimiento',
             element: <ListServicios />,
+          },
+          {
+            path: '/horarios/mantenimiento',
+            element: <ListaMantenimientoHorarios />,
           },
           {
             path: '/facturas',
