@@ -245,7 +245,40 @@ class ProductoModel
         }
     }
 
-    //validar datos del formulario 
+    // Borrado lógico de producto
+    public function delete($id)
+    {
+        $id = filter_var($id, FILTER_VALIDATE_INT);
+
+        if ($id === false || $id <= 0) {
+            throw new InvalidArgumentException(
+                "El ID del producto no es válido."
+            );
+        }
+
+        $producto = $this->get($id);
+
+        if (!$producto) {
+            throw new Exception(
+                "El producto no existe o ya fue eliminado."
+            );
+        }
+
+        $sql = "UPDATE producto
+                SET estado = 0
+                WHERE id_producto = " . (int)$id . "
+                AND estado = 1";
+
+        $this->enlace->executeSQL_DML($sql);
+
+        return [
+            "success" => true,
+            "id_producto" => $id,
+            "mensaje" => "Producto eliminado correctamente."
+        ];
+    }
+
+    //validar datos
     private function validarDatos($nombre, $descripcion, $idCategoria, $precioTexto, $stockTexto, $marca, $presentacion, $imagenUrl) 
     {
         if($nombre === '' || strlen($nombre) > 100) {

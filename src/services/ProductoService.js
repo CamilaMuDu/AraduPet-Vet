@@ -22,6 +22,10 @@ class ProductoService {
   updateProducto(productoId, producto) {
     return axios.put(BASE_URL + '/update/' + productoId, producto);
   }
+
+  deleteProducto(productoId) {
+    return axios.delete(BASE_URL + '/delete/' + productoId);
+  }
 }
 
 export default new ProductoService();

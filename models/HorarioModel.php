@@ -10,7 +10,7 @@ class HorarioModel
     }
 
     /**
-     * Obtener todos los horarios con la información del doctor asignado
+     * Obtener todos los horarios de la tabla excepciones_horario
      */
     public function getAll()
     {
@@ -18,9 +18,8 @@ class HorarioModel
             $sql = "SELECT h.id_excepciones_horario, h.dia_semana, h.hora_apertura, h.hora_cierre,
                            d.id_doctor, u.nombre AS nombre_doctor, d.especialidad
                     FROM excepciones_horario h
-                    INNER JOIN doctor d ON d.id_excepciones_horario = h.id_excepciones_horario
-                    INNER JOIN usuario u ON d.id_usuario = u.id_usuario
-                    WHERE d.activo = 1
+                    LEFT JOIN doctor d ON d.id_excepciones_horario = h.id_excepciones_horario
+                    LEFT JOIN usuario u ON d.id_usuario = u.id_usuario
                     ORDER BY h.dia_semana ASC, h.hora_apertura ASC";
 
             return $this->db->executeSQL($sql);
@@ -30,9 +29,6 @@ class HorarioModel
         }
     }
 
-    /**
-     * Obtener el horario/excepción de un doctor específico por su id_doctor
-     */
     public function getByDoctor($idDoctor)
     {
         try {
@@ -42,19 +38,15 @@ class HorarioModel
                     FROM excepciones_horario h
                     INNER JOIN doctor d ON d.id_excepciones_horario = h.id_excepciones_horario
                     INNER JOIN usuario u ON d.id_usuario = u.id_usuario
-                    WHERE d.id_doctor = {$idSeguro} AND d.activo = 1";
+                    WHERE d.id_doctor = {$idSeguro}";
 
-            $result = $this->db->executeSQL($sql);
-            return !empty($result) ? $result[0] : null;
+            return $this->db->executeSQL($sql);
         } catch (Exception $e) {
             handleException($e);
             return false;
         }
     }
 
-    /**
-     * Crear un nuevo horario en la tabla excepciones_horario
-     */
     public function create($data)
     {
         try {
@@ -72,9 +64,6 @@ class HorarioModel
         }
     }
 
-    /**
-     * Actualizar las horas de una excepción u horario existente
-     */
     public function update($id, $data)
     {
         try {
@@ -96,9 +85,6 @@ class HorarioModel
         }
     }
 
-    /**
-     * Eliminar una excepción u horario por su ID
-     */
     public function delete($id)
     {
         try {

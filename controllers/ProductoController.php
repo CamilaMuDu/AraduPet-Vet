@@ -85,4 +85,20 @@ class ProductoController
             handleException($e);
         }
     }
+
+    // Eliminar producto 
+    public function delete($id)
+    {
+        try {
+            $productoModel = new ProductoModel();
+            $resultado = $productoModel->delete($id);
+
+            $response = new Response();
+            $response->toJSON($resultado);
+
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
+        }
+    }
 }
