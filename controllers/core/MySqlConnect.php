@@ -153,10 +153,6 @@ class MySqlConnect {
 		}
 	}
 
-
-	/**
- * Escapar caracteres especiales para consultas SQL
- */
 public function escapeString($valor)
 {
     try {

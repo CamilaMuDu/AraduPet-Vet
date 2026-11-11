@@ -20,7 +20,17 @@ class ProductoService {
   }
 
   updateProducto(productoId, producto) {
-    return axios.put(BASE_URL + '/update/' + productoId, producto);
+    return axios.post(BASE_URL + '/update/' + productoId, producto);
+  }
+
+  guardarImagen(productoId, imagen) {
+    const datos = new FormData();
+    datos.append('imagen', imagen);
+
+    return axios.post(
+      BASE_URL + '/guardarImagen/' + productoId,
+      datos
+    );
   }
 
   deleteProducto(productoId) {

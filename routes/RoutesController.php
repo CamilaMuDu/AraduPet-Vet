@@ -116,7 +116,7 @@ class RoutesController
                                             echo json_encode($json, http_response_code($json["status"]));
                                         }
                                     } else {
-                                        // Llamar a la acción index si no hay acción ni parámetro
+
                                         $response->index();
                                     }
                                     break;
@@ -124,7 +124,13 @@ class RoutesController
                                 case 'POST':
                                     if ($action) {
                                         if (method_exists($controller, $action)) {
-                                            $response->$action();
+
+                                            if (($action === 'update' || $action === 'guardarImagen') && $param1) {
+                                                $response->$action($param1);
+                                            } else {
+                                                $response->$action();
+                                            }
+
                                         } else {
                                             $json = array(
                                                 'status' => 404,

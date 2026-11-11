@@ -16,6 +16,14 @@ ListCardProductos.propTypes = {
     data: PropTypes.array.isRequired,
 };
 
+const obtenerRutaImagen = (imagenUrl) => {
+    if (!imagenUrl) return '';
+    if (imagenUrl.startsWith('http')) {
+        return imagenUrl;
+    }
+    return `${import.meta.env.VITE_BASE_URL}${imagenUrl.replace(/^\/+/, '')}`;
+};
+
 export function ListCardProductos({ data }) {
     return (
         <Grid container spacing={3} sx={{ py: 2 }}>
@@ -44,7 +52,7 @@ export function ListCardProductos({ data }) {
                             <CardMedia
                                 component="img"
                                 height="220"
-                                image={item.imagen_url}
+                                image={obtenerRutaImagen(item.imagen_url)}
                                 alt={item.nombre}
                                 sx={{ objectFit: 'contain', p: 2 }}
                             />

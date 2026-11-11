@@ -46,41 +46,57 @@ class ProductoController
         }
     }
 
-    //post producto 
+    // Crear producto
     public function create()
     {
-        try{
-            $data = json_decode(file_get_contents("php://input"), true);
+        try {
+            $data = $_POST;
 
-            if(!is_array($data) || json_last_error() !== JSON_ERROR_NONE){
-                throw new InvalidArgumentException("El JSON enviado no es valido");
-            }
+            // Recibe la imagen que se selecciona
+            $imagen = $_FILES['imagen'] ?? null;
 
-            $prodctoM = new ProductoModel();
-            $result = $prodctoM->create($data);
+            $productoM = new ProductoModel();
+            $result = $productoM->create($data, $imagen);
 
             $response = new Response();
             $response->toJSON($result);
-        } catch (Exception $e) {
-            handleException($e);
+
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
         }
     }
 
-    //put actualizar producto
+    // Actualizar producto
     public function update($id)
     {
-        try{
-            $data = json_decode(file_get_contents("php://input"), true);
+        try {
+            $data = $_POST;
+            $imagen = $_FILES['imagen'] ?? null;
 
-            if(!is_array($data) || json_last_error() !== JSON_ERROR_NONE){
-                throw new InvalidArgumentException("El JSON enviado no es valido");
-            }
-
-            $prodctoM = new ProductoModel();
-            $result = $prodctoM->update($id, $data);
+            $productoM = new ProductoModel();
+            $result = $productoM->update($id, $data, $imagen);
 
             $response = new Response();
             $response->toJSON($result);
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
+        }
+    }
+
+    // Guardar imagen de un producto
+    public function guardarImagen($id)
+    {
+        try {
+            $imagen = $_FILES['imagen'] ?? null;
+
+            $productoM = new ProductoModel();
+            $resultado = $productoM->guardarImagen($id, $imagen);
+
+            $response = new Response();
+            $response->toJSON($resultado);
+
         } catch (Exception $e) {
             handleException($e);
         }

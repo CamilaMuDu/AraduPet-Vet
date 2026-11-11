@@ -35,6 +35,16 @@ export function DetalleProducto() {
             });
     }, [id]);
 
+    const obtenerUrlImagen = (ruta) => {
+        if (!ruta) return '';
+
+        if (ruta.startsWith('http://') || ruta.startsWith('https://')) {
+            return ruta;
+        }
+
+        return `http://localhost/AraduPetVet/${ruta.replace(/^\/+/, '')}`;
+    };
+
     const formatoColones = (precio) => {
         return new Intl.NumberFormat('es-CR', {
             style: 'currency',
@@ -94,7 +104,7 @@ export function DetalleProducto() {
                         {data.imagen_url ? (
                             <Box
                                 component="img"
-                                src={data.imagen_url}
+                                src={obtenerUrlImagen(data.imagen_url)}
                                 alt={data.nombre}
                                 sx={{
                                     width: '100%',
