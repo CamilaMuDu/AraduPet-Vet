@@ -2,96 +2,71 @@
 
 class HorarioController
 {
-    private $model;
-
-    public function __construct()
-    {
-        $this->model = new HorarioModel();
-    }
-
-    /**
-     * Endpoint GET /horario
-     */
     public function index()
     {
-        $response = new Response();
-        $result = $this->model->getAll();
+        try {
+            $response = new Response();
+            $horarioModel = new HorarioModel();
+            $result = $horarioModel->getAll();
 
-        if ($result !== false) {
-            $response->toJSON(200, $result);
-        } else {
-            $response->toJSON(500, null, "Error al consultar los horarios.");
+            $response->toJSON($result);
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
         }
     }
 
-    /**
-     * Endpoint GET /horario/get/$idDoctor
-     */
-    public function get($idDoctor)
-    {
-        $response = new Response();
-        $result = $this->model->getByDoctor($idDoctor);
-
-        if ($result !== false) {
-            $response->toJSON(200, $result);
-        } else {
-            $response->toJSON(404, null, "No se encontró el horario para el doctor especificado.");
-        }
-    }
-
-    /**
-     * Endpoint POST /horario
-     */
     public function create()
     {
-        $response = new Response();
-        $request = new Request();
-        $data = $request->getBody();
+        try {
+            $data = json_decode(file_get_contents("php://input"), true);
 
-        if (!isset($data->dia_semana) || empty($data->hora_apertura) || empty($data->hora_cierre)) {
-            $response->toJSON(400, null, "Faltan datos obligatorios (día de la semana, hora apertura y hora cierre).");
-            return;
-        }
+            if (!is_array($data) || json_last_error() !== JSON_ERROR_NONE) {
+                throw new InvalidArgumentException("Los datos JSON son inválidos");
+            }
 
-        $result = $this->model->create($data);
+            $horarioModel = new HorarioModel();
+            $result = $horarioModel->create($data);
 
-        if ($result) {
-            $response->toJSON(201, ["id_excepciones_horario" => $result], "Horario registrado correctamente.");
-        } else {
-            $response->toJSON(500, null, "No se pudo registrar el horario.");
+            $response = new Response();
+            $response->toJSON($result);
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
         }
     }
 
-    /**
-     * Endpoint PUT /horario/update/$id
-     */
     public function update($id)
     {
-        $response = new Response();
-        $request = new Request();
-        $data = $request->getBody();
+        try {
+            $data = json_decode(file_get_contents("php://input"), true);
 
-        $result = $this->model->update($id, $data);
+            if (!is_array($data) || json_last_error() !== JSON_ERROR_NONE) {
+                throw new InvalidArgumentException("Los datos JSON son inválidos");
+            }
 
-        if ($result) {
-            $response->toJSON(200, true, "Horario actualizado correctamente.");
-        } else {
-            $response->toJSON(500, false, "Error al actualizar el horario.");
+            $horarioModel = new HorarioModel();
+            $result = $horarioModel->update($id, $data);
+
+            $response = new Response();
+            $response->toJSON($result);
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
         }
     }
 
-    /**
-     * Endpoint DELETE /horario/delete/$id
-     */
     public function delete($id)
     {
-        $response = new Response();
-        $result = $this->model->delete($id);
+        try {
+            $horarioModel = new HorarioModel();
+            $result = $horarioModel->delete($id);
 
-        if ($result) {
-            $response->toJSON(200, true, "Registro de horario eliminado correctamente.");
-        } else {
-            $response->toJSON(500, false, "Error al eliminar el registro.");
+            $response = new Response();
+            $response->toJSON($result);
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
         }
     }
 }

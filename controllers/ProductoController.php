@@ -1,4 +1,3 @@
-
 <?php
 
 class ProductoController
@@ -52,7 +51,6 @@ class ProductoController
         try {
             $data = $_POST;
 
-            // Recibe la imagen que se selecciona
             $imagen = $_FILES['imagen'] ?? null;
 
             $productoM = new ProductoModel();

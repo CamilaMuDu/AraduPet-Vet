@@ -26,6 +26,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useNavigate } from 'react-router-dom';
 import DoctorService from '../../services/DoctorService';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 export function ListaMantenimientoDoctores() {
     const [doctores, setDoctores] = useState([]);
@@ -182,25 +183,35 @@ export function ListaMantenimientoDoctores() {
                                     <TableCell>{doctor.correo}</TableCell>
                                     <TableCell>{doctor.especialidad}</TableCell>
 
-                                    <TableCell align="center">
+                                    <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
+                                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 0.5 }}>
+                                            <IconButton
+                                                color="info"
+                                                onClick={() => navigate(`/veterinarios/detalle/${doctor.id_doctor}`)}
+                                                title="Ver detalle del veterinario"
+                                                size="small"
+                                            >
+                                                <VisibilityIcon />
+                                            </IconButton>
 
-                                        <IconButton
-                                            color="primary"
-                                            onClick={() =>
-                                                navigate(`/doctores/editar/${doctor.id_doctor}`)
-                                            }
-                                            title="Editar veterinario"
-                                        >
-                                            <EditIcon />
-                                        </IconButton>
+                                            <IconButton
+                                                color="primary"
+                                                onClick={() => navigate(`/doctores/editar/${doctor.id_doctor}`)}
+                                                title="Editar veterinario"
+                                                size="small"
+                                            >
+                                                <EditIcon />
+                                            </IconButton>
 
-                                        <IconButton
-                                            color="error"
-                                            onClick={() => manejarEliminar(doctor.id_doctor)}
-                                            title="Eliminar veterinario"
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
+                                            <IconButton
+                                                color="error"
+                                                onClick={() => manejarEliminar(doctor.id_doctor)}
+                                                title="Eliminar veterinario"
+                                                size="small"
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </Box>
                                     </TableCell>
                                 </TableRow>
                             ))}

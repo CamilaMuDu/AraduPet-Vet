@@ -13,7 +13,8 @@ import {
     Box,
     Button,
     CircularProgress,
-    Alert
+    Alert,
+    Snackbar
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -30,6 +31,19 @@ export const ListServicios = () => {
     // 2. Estados locales para controlar el formulario y la edición
     const [showForm, setShowForm] = useState(false);
     const [selectedServicio, setSelectedServicio] = useState(null);
+    // Mensajes de confirmación
+    const [mensaje, setMensaje] = useState({
+        open: false,
+        texto: '',
+        severity: 'success'
+    });
+
+    const cerrarMensaje = () => {
+        setMensaje((prev) => ({
+            ...prev,
+            open: false
+        }));
+    };
 
     // 3. Función para cargar los servicios desde la API
     // 3. Función para cargar los servicios desde la API
@@ -40,7 +54,7 @@ export const ListServicios = () => {
 
             // Leemos response.data.results si viene en objeto, o response.data si viene como arreglo directo
             const dataArray = response.data?.results || response.data || [];
-            
+
             setServicios(Array.isArray(dataArray) ? dataArray : []);
             setError(null);
         } catch (err) {
@@ -73,36 +87,72 @@ export const ListServicios = () => {
     };
 
     const handleSuccess = () => {
+        const esEdicion = Boolean(selectedServicio?.id_servicio);
+
+        setMensaje({
+            open: true,
+            texto: esEdicion
+                ? 'Servicio actualizado correctamente.'
+                : 'Servicio creado correctamente.',
+            severity: 'success'
+        });
+
         setShowForm(false);
         setSelectedServicio(null);
-        loadServicios(); // Recarga la lista actualizada tras guardar
+        loadServicios();
     };
 
-    // 6. Manejo de borrado/inactivación de un servicio
     const handleDelete = async (id) => {
         if (window.confirm("¿Está seguro de que desea desactivar este servicio?")) {
             try {
                 await ServicioService.deleteServicio(id);
+
+                setMensaje({
+                    open: true,
+                    texto: 'Servicio desactivado correctamente.',
+                    severity: 'success'
+                });
+
                 loadServicios();
+
             } catch (err) {
                 console.error("Error al eliminar servicio:", err);
-                alert("Ocurrió un error al intentar desactivar el servicio.");
+
+                setMensaje({
+                    open: true,
+                    texto: 'Ocurrió un error al intentar desactivar el servicio.',
+                    severity: 'error'
+                });
             }
         }
     };
 
-    if (loading) {
-        return (
-            <Box display="flex" justifyContent="center" my={4}>
-                <CircularProgress />
-            </Box>
-        );
-    }
+    const notificacion = (
+        <Snackbar
+            open={mensaje.open}
+            autoHideDuration={4000}
+            onClose={cerrarMensaje}
+            anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'center'
+            }}
+        >
+            <Alert
+                onClose={cerrarMensaje}
+                severity={mensaje.severity}
+                variant="filled"
+                sx={{ width: '100%' }}
+            >
+                {mensaje.texto}
+            </Alert>
+        </Snackbar>
+    );
 
-    // Si showForm es true, mostramos el Formulario con tu mismo layout
     if (showForm) {
         return (
             <Box sx={{ p: 3 }}>
+                {notificacion}
+
                 <FormServicio
                     initialData={selectedServicio}
                     onCancel={handleCancel}
@@ -113,9 +163,21 @@ export const ListServicios = () => {
     }
 
     // Si showForm es false, se muestra la tabla con tu diseño intacto
+
     return (
         <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            {notificacion}
+            {loading && (
+                <Box display="flex" justifyContent="center" my={4}>
+                    <CircularProgress />
+                </Box>
+            )}
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 3
+            }}>
                 <Typography variant="h4" component="h1" color="primary">
                     Mantenimiento de Servicios
                 </Typography>
@@ -128,9 +190,7 @@ export const ListServicios = () => {
                     Nuevo Servicio
                 </Button>
             </Box>
-
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
             <TableContainer component={Paper} elevation={3}>
                 <Table sx={{ minWidth: 650 }} aria-label="tabla de servicios">
                     <TableHead sx={{ backgroundColor: '#f5f5f5' }}>

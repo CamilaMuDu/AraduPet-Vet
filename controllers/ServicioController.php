@@ -43,69 +43,97 @@ class ServicioController
         echo json_encode($json, http_response_code($json['status']));
     }
 
+    
     public function create()
     {
-        $inputJSON = file_get_contents('php://input');
-        $object = json_decode($inputJSON);
+        try {
+            $data = $_POST;
+            $imagen = $_FILES['imagen'] ?? null;
 
-        if (!isset($object->nombre) || empty(trim($object->nombre)) || !isset($object->precio) || !isset($object->duracion_minutos)) {
-            $json = [
-                'status'  => 400,
-                'results' => 'Faltan datos obligatorios (nombre, precio o duracion_minutos)'
-            ];
-            echo json_encode($json, http_response_code($json['status']));
-            return;
+            if (
+                empty(trim($data['nombre'] ?? '')) ||
+                !isset($data['precio']) ||
+                !isset($data['duracion_minutos'])
+            ) {
+                http_response_code(400);
+                echo json_encode([
+                    'status' => 400,
+                    'results' => 'Faltan datos obligatorios'
+                ]);
+                return;
+            }
+
+            $servicioModel = new ServicioModel();
+            $resultado = $servicioModel->create($data, $imagen);
+
+            if ($resultado) {
+                http_response_code(201);
+                echo json_encode([
+                    'status' => 201,
+                    'results' => 'Servicio registrado correctamente',
+                    'id_servicio' => $resultado
+                ]);
+            } else {
+                http_response_code(400);
+                echo json_encode([
+                    'status' => 400,
+                    'results' => 'No se pudo registrar el servicio'
+                ]);
+            }
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
         }
-
-        $servicioModel = new ServicioModel();
-        $response = $servicioModel->create($object);
-
-        if ($response) {
-            $json = [
-                'status'  => 201,
-                'results' => 'Servicio creado exitosamente con el ID: ' . $response
-            ];
-        } else {
-            $json = [
-                'status'  => 400,
-                'results' => 'No se pudo registrar el servicio'
-            ];
-        }
-
-        echo json_encode($json, http_response_code($json['status']));
     }
 
+
+    
     public function update($id)
     {
-        $inputJSON = file_get_contents('php://input');
-        $object = json_decode($inputJSON);
+        try {
+            // Recibir los datos del formulario
+            $data = $_POST;
 
-        if (!isset($object->nombre) || empty(trim($object->nombre)) || !isset($object->precio)) {
-            $json = [
-                'status'  => 400,
-                'results' => 'Faltan datos obligatorios para la actualización'
-            ];
-            echo json_encode($json, http_response_code($json['status']));
-            return;
+            // Recibir imagen nueva, si se seleccionó
+            $imagen = $_FILES['imagen'] ?? null;
+
+            if (
+                empty(trim($data['nombre'] ?? '')) ||
+                !isset($data['precio']) ||
+                !isset($data['duracion_minutos'])
+            ) {
+                http_response_code(400);
+                echo json_encode([
+                    'status' => 400,
+                    'results' => 'Faltan datos obligatorios para actualizar'
+                ]);
+                return;
+            }
+
+            $servicioModel = new ServicioModel();
+
+            // Actualizar el servicio
+            $resultado = $servicioModel->update($id, $data, $imagen);
+
+            if ($resultado) {
+                http_response_code(200);
+                echo json_encode([
+                    'status' => 200,
+                    'results' => 'Servicio actualizado correctamente'
+                ]);
+            } else {
+                http_response_code(400);
+                echo json_encode([
+                    'status' => 400,
+                    'results' => 'No se pudo actualizar el servicio'
+                ]);
+            }
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
         }
-
-        $servicioModel = new ServicioModel();
-        $response = $servicioModel->update($id, $object);
-
-        if ($response) {
-            $json = [
-                'status'  => 200,
-                'results' => 'Servicio actualizado correctamente'
-            ];
-        } else {
-            $json = [
-                'status'  => 400,
-                'results' => 'No se pudo actualizar el servicio'
-            ];
-        }
-
-        echo json_encode($json, http_response_code($json['status']));
     }
+
 
     public function delete($id)
     {

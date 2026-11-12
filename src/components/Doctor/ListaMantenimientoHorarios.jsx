@@ -1,26 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
-    IconButton,
-    Typography,
-    Box,
-    Button,
-    CircularProgress,
-    Alert,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    TextField,
-    Grid,
-    Card,
-    CardContent
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+    Paper, IconButton, Typography, Box, Button, CircularProgress, Alert,
+    FormControl, InputLabel, Select, MenuItem, TextField, Grid, Card, CardContent
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -29,6 +11,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import HorarioService from '../../services/HorarioService';
 import DoctorService from '../../services/DoctorService';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import { useNavigate } from 'react-router-dom';
 
 const DIAS_SEMANA = [
     { id: 1, nombre: 'Lunes' },
@@ -46,8 +30,8 @@ export function ListaMantenimientoHorarios() {
     const [selectedDoctor, setSelectedDoctor] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
-    // Estado para controlar el formulario interno
     const [showForm, setShowForm] = useState(false);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
@@ -59,28 +43,33 @@ export function ListaMantenimientoHorarios() {
     const loadData = async () => {
         try {
             setLoading(true);
-
-            // Obtener horarios y la lista oficial de veterinarios en paralelo
             const [resHorarios, resDoctores] = await Promise.all([
                 HorarioService.getHorarios(),
                 DoctorService.getDoctores()
             ]);
 
-            const dataHorarios = resHorarios.data?.results || resHorarios.data || [];
-            const dataDoctores = Array.isArray(resDoctores.data) ? resDoctores.data : [];
+            console.log("Respuesta raw de Horarios:", resHorarios.data);
+            console.log("Respuesta raw de Doctores:", resDoctores.data);
 
-            setHorarios(Array.isArray(dataHorarios) ? dataHorarios : []);
+            // Extraer datos asegurando compatibilidad con la envoltura del Response PHP
+            const rawHorarios = resHorarios.data?.results || resHorarios.data?.result || resHorarios.data || [];
+            const rawDoctores = resDoctores.data?.results || resDoctores.data?.result || resDoctores.data || [];
+
+            const dataHorarios = Array.isArray(rawHorarios) ? rawHorarios : [];
+            const dataDoctores = Array.isArray(rawDoctores) ? rawDoctores : [];
+
+            setHorarios(dataHorarios);
             setDoctores(dataDoctores);
 
-            // Seleccionar al primer doctor automáticamente si no se ha seleccionado ninguno
+            // Seleccionar al primer doctor si aún no se ha seleccionado ninguno
             if (dataDoctores.length > 0 && !selectedDoctor) {
-                setSelectedDoctor(dataDoctores[0].id_doctor);
+                setSelectedDoctor(String(dataDoctores[0].id_doctor));
             }
 
             setError(null);
         } catch (err) {
             console.error("Error al cargar mantenimientos de horarios:", err);
-            setError("No se pudieron cargar los registros de horarios o la lista de veterinarios.");
+            setError("No se pudieron cargar los registros de horarios.");
         } finally {
             setLoading(false);
         }
@@ -90,10 +79,6 @@ export function ListaMantenimientoHorarios() {
         loadData();
     }, []);
 
-    const handleDoctorChange = (event) => {
-        setSelectedDoctor(event.target.value);
-    };
-
     const handleCreate = () => {
         setEditId(null);
         setFormData({ dia_semana: 1, hora_apertura: '08:00', hora_cierre: '17:00' });
@@ -101,18 +86,14 @@ export function ListaMantenimientoHorarios() {
     };
 
     const handleEdit = (horario) => {
-        setEditId(horario.id_excepciones_horario);
+        const idClave = horario.id_horario || horario.id_excepciones_horario;
+        setEditId(idClave);
         setFormData({
             dia_semana: horario.dia_semana,
             hora_apertura: horario.hora_apertura,
             hora_cierre: horario.hora_cierre
         });
         setShowForm(true);
-    };
-
-    const handleCancel = () => {
-        setShowForm(false);
-        setEditId(null);
     };
 
     const handleSubmit = async (e) => {
@@ -127,37 +108,33 @@ export function ListaMantenimientoHorarios() {
             if (editId) {
                 await HorarioService.updateHorario(editId, formData);
             } else {
-                await HorarioService.createHorario(formData);
+                await HorarioService.createHorario({ ...formData, id_doctor: selectedDoctor });
             }
             setShowForm(false);
             loadData();
         } catch (err) {
-            console.error("Error al guardar el horario:", err);
+            console.error("Error al guardar horario:", err);
             alert("Ocurrió un error al guardar el horario.");
         }
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm("¿Está seguro de eliminar este registro de horario?")) {
+        if (window.confirm("¿Desea eliminar este registro de horario?")) {
             try {
                 await HorarioService.deleteHorario(id);
                 loadData();
             } catch (err) {
                 console.error("Error al eliminar horario:", err);
-                alert("Error al eliminar el registro.");
             }
         }
     };
 
-    // Obtener información del doctor actualmente seleccionado
-    const doctorActual = doctores.find(d => d.id_doctor == selectedDoctor);
+    const doctorActual = doctores.find(d => String(d.id_doctor) === String(selectedDoctor));
 
-    // Filtrar los horarios por el id_excepciones_horario del doctor o id_doctor
+    // Filtrado robusto por id_doctor
     const horariosFiltrados = horarios.filter(h => {
         if (!selectedDoctor) return true;
-        
-        return (h.id_doctor == selectedDoctor) || 
-               (doctorActual && doctorActual.id_excepciones_horario == h.id_excepciones_horario);
+        return String(h.id_doctor) === String(selectedDoctor);
     });
 
     if (loading) {
@@ -170,18 +147,12 @@ export function ListaMantenimientoHorarios() {
 
     return (
         <Box sx={{ p: 3 }}>
-            {/* Cabecera idéntica a productos y servicios */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h4" component="h1" color="primary">
                     Mantenimiento de Horarios por Veterinario
                 </Typography>
                 {!showForm && (
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<AddIcon />}
-                        onClick={handleCreate}
-                    >
+                    <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleCreate}>
                         Nuevo Horario
                     </Button>
                 )}
@@ -189,12 +160,11 @@ export function ListaMantenimientoHorarios() {
 
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-            {/* Formulario de Creación / Edición */}
             {showForm ? (
                 <Card elevation={3} sx={{ mb: 4, p: 2 }}>
                     <CardContent>
                         <Typography variant="h6" mb={2}>
-                            {editId ? "Modificar Horario" : "Registrar Nuevo Horario"}
+                            {editId ? "Modificar Horario" : `Registrar Nuevo Horario para: ${doctorActual?.nombre || ''}`}
                         </Typography>
                         <form onSubmit={handleSubmit}>
                             <Grid container spacing={2}>
@@ -207,9 +177,7 @@ export function ListaMantenimientoHorarios() {
                                             onChange={(e) => setFormData({ ...formData, dia_semana: e.target.value })}
                                         >
                                             {DIAS_SEMANA.map((d) => (
-                                                <MenuItem key={d.id} value={d.id}>
-                                                    {d.nombre}
-                                                </MenuItem>
+                                                <MenuItem key={d.id} value={d.id}>{d.nombre}</MenuItem>
                                             ))}
                                         </Select>
                                     </FormControl>
@@ -221,7 +189,7 @@ export function ListaMantenimientoHorarios() {
                                         type="time"
                                         value={formData.hora_apertura}
                                         onChange={(e) => setFormData({ ...formData, hora_apertura: e.target.value })}
-                                        slotProps={{ inputLabel: { shrink: true } }}
+                                        InputLabelProps={{ shrink: true }}
                                     />
                                 </Grid>
                                 <Grid item xs={12} sm={4}>
@@ -231,11 +199,11 @@ export function ListaMantenimientoHorarios() {
                                         type="time"
                                         value={formData.hora_cierre}
                                         onChange={(e) => setFormData({ ...formData, hora_cierre: e.target.value })}
-                                        slotProps={{ inputLabel: { shrink: true } }}
+                                        InputLabelProps={{ shrink: true }}
                                     />
                                 </Grid>
                                 <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}>
-                                    <Button variant="outlined" color="secondary" startIcon={<CancelIcon />} onClick={handleCancel}>
+                                    <Button variant="outlined" color="secondary" startIcon={<CancelIcon />} onClick={() => setShowForm(false)}>
                                         Cancelar
                                     </Button>
                                     <Button variant="contained" color="primary" type="submit" startIcon={<SaveIcon />}>
@@ -247,14 +215,13 @@ export function ListaMantenimientoHorarios() {
                     </CardContent>
                 </Card>
             ) : (
-                /* Seleccionador de Veterinario */
                 <Box sx={{ mb: 4, maxWidth: 400 }}>
                     <FormControl fullWidth size="small">
                         <InputLabel>Seleccionar Veterinario / Doctor</InputLabel>
                         <Select
                             value={selectedDoctor}
                             label="Seleccionar Veterinario / Doctor"
-                            onChange={handleDoctorChange}
+                            onChange={(e) => setSelectedDoctor(e.target.value)}
                         >
                             {doctores.map((doc) => (
                                 <MenuItem key={doc.id_doctor} value={doc.id_doctor}>
@@ -266,10 +233,9 @@ export function ListaMantenimientoHorarios() {
                 </Box>
             )}
 
-            {/* Tabla con los horarios del doctor seleccionado */}
             {!showForm && (
                 <TableContainer component={Paper} elevation={3}>
-                    <Table sx={{ minWidth: 650 }} aria-label="tabla de horarios">
+                    <Table sx={{ minWidth: 650 }}>
                         <TableHead>
                             <TableRow sx={{ backgroundColor: '#E1F5FE' }}>
                                 <TableCell><strong>Veterinario</strong></TableCell>
@@ -282,28 +248,28 @@ export function ListaMantenimientoHorarios() {
                         </TableHead>
                         <TableBody>
                             {horariosFiltrados.length > 0 ? (
-                                horariosFiltrados.map((horario) => {
-                                    const diaNombre = DIAS_SEMANA.find(d => d.id == horario.dia_semana)?.nombre || `Día ${horario.dia_semana}`;
+                                horariosFiltrados.map((horario, index) => {
+                                    const diaNombre = DIAS_SEMANA.find(d => Number(d.id) === Number(horario.dia_semana))?.nombre || `Día ${horario.dia_semana}`;
+                                    const idRegistro = horario.id_horario || horario.id_excepciones_horario || index;
                                     return (
-                                        <TableRow key={horario.id_excepciones_horario} hover>
-                                            <TableCell>{doctorActual?.nombre || horario.nombre_doctor || '—'}</TableCell>
-                                            <TableCell>{doctorActual?.especialidad || horario.especialidad || 'General'}</TableCell>
+                                        <TableRow key={idRegistro} hover>
+                                            <TableCell>{doctorActual?.nombre || horario.nombre_doctor}</TableCell>
+                                            <TableCell>{doctorActual?.especialidad || horario.especialidad}</TableCell>
                                             <TableCell align="center">{diaNombre}</TableCell>
                                             <TableCell align="center">{horario.hora_apertura}</TableCell>
                                             <TableCell align="center">{horario.hora_cierre}</TableCell>
                                             <TableCell align="center">
-                                                <IconButton
-                                                    color="primary"
-                                                    onClick={() => handleEdit(horario)}
-                                                    title="Editar horario"
+                                                <IconButton 
+                                                    color="info" 
+                                                    onClick={() => navigate(`/horarios/detalle/${idRegistro}`)} 
+                                                    title="Ver detalle del horario"
                                                 >
+                                                    <VisibilityIcon />
+                                                </IconButton>
+                                                <IconButton color="primary" onClick={() => handleEdit(horario)} title="Editar horario">
                                                     <EditIcon />
                                                 </IconButton>
-                                                <IconButton
-                                                    color="error"
-                                                    onClick={() => handleDelete(horario.id_excepciones_horario)}
-                                                    title="Eliminar horario"
-                                                >
+                                                <IconButton color="error" onClick={() => handleDelete(idRegistro)} title="Eliminar horario">
                                                     <DeleteIcon />
                                                 </IconButton>
                                             </TableCell>

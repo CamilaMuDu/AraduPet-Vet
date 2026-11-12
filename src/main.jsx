@@ -25,6 +25,8 @@ import { DoctorMantenimiento } from './components/Doctor/DoctorMantenimiento.jsx
 import { ListaMantenimientoHorarios } from './components/Doctor/ListaMantenimientoHorarios.jsx';
 import { CatalogoServicios } from './components/Servicios/CatalogoServicios.jsx';
 import { DetalleServicio } from './components/Servicios/DetalleServicio.jsx';
+import { DetalleDoctor } from './components/Doctor/DetalleDoctor';
+import { DetalleHorario } from './components/Doctor/DetalleHorario';
 
 
 
@@ -84,6 +86,10 @@ const rutas = createBrowserRouter([
             element: <ListaMantenimientoHorarios />,
           },
           {
+            path: '/horarios/detalle/:id',
+            element: <DetalleHorario />,
+          },
+          {
             path: '/facturas',
             element: <ListaFacturas />,
           },
@@ -102,6 +108,10 @@ const rutas = createBrowserRouter([
           {
             path: '/doctores/editar/:id',
             element: <DoctorMantenimiento />,
+          },
+          {
+            path: 'veterinarios/detalle/:id',
+            element: <DetalleDoctor />,
           },
           {
             path: '/catalog-movies/',

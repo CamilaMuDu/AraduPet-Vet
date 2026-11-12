@@ -2,98 +2,109 @@
 
 class HorarioModel
 {
-    private $db;
+    public $enlace;
 
     public function __construct()
     {
-        $this->db = new MySqlConnect();
+        $this->enlace = new MySqlConnect();
     }
 
-    /**
-     * Obtener todos los horarios de la tabla excepciones_horario
-     */
     public function getAll()
     {
         try {
-            $sql = "SELECT h.id_excepciones_horario, h.dia_semana, h.hora_apertura, h.hora_cierre,
-                           d.id_doctor, u.nombre AS nombre_doctor, d.especialidad
-                    FROM excepciones_horario h
-                    LEFT JOIN doctor d ON d.id_excepciones_horario = h.id_excepciones_horario
-                    LEFT JOIN usuario u ON d.id_usuario = u.id_usuario
+            $sql = "SELECT 
+                        h.id_horario, 
+                        h.id_doctor, 
+                        h.dia_semana, 
+                        h.hora_apertura, 
+                        h.hora_cierre,
+                        u.nombre AS nombre_doctor, 
+                        d.especialidad
+                    FROM horario_doctor h
+                    INNER JOIN doctor d ON h.id_doctor = d.id_doctor
+                    INNER JOIN usuario u ON d.id_usuario = u.id_usuario
+                    WHERE d.activo = 1 AND h.activo = 1
                     ORDER BY h.dia_semana ASC, h.hora_apertura ASC";
 
-            return $this->db->executeSQL($sql);
-        } catch (Exception $e) {
-            handleException($e);
-            return false;
-        }
-    }
-
-    public function getByDoctor($idDoctor)
-    {
-        try {
-            $idSeguro = intval($idDoctor);
-            $sql = "SELECT h.id_excepciones_horario, h.dia_semana, h.hora_apertura, h.hora_cierre,
-                           d.id_doctor, u.nombre AS nombre_doctor, d.especialidad
-                    FROM excepciones_horario h
-                    INNER JOIN doctor d ON d.id_excepciones_horario = h.id_excepciones_horario
-                    INNER JOIN usuario u ON d.id_usuario = u.id_usuario
-                    WHERE d.id_doctor = {$idSeguro}";
-
-            return $this->db->executeSQL($sql);
-        } catch (Exception $e) {
-            handleException($e);
-            return false;
+            return $this->enlace->executeSQL($sql);
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            return [];
         }
     }
 
     public function create($data)
     {
         try {
-            $diaSemana = intval($data->dia_semana);
-            $horaApertura = $this->db->escapeString($data->hora_apertura);
-            $horaCierre = $this->db->escapeString($data->hora_cierre);
+            $idDoctor = filter_var($data['id_doctor'], FILTER_VALIDATE_INT);
+            $diaSemana = filter_var($data['dia_semana'], FILTER_VALIDATE_INT);
+            $horaApertura = $this->enlace->escapeString($data['hora_apertura']);
+            $horaCierre = $this->enlace->escapeString($data['hora_cierre']);
 
-            $sql = "INSERT INTO excepciones_horario (dia_semana, hora_apertura, hora_cierre) 
-                    VALUES ({$diaSemana}, '{$horaApertura}', '{$horaCierre}')";
+            if (!$idDoctor || !$diaSemana) {
+                throw new InvalidArgumentException("El doctor y el día son obligatorios.");
+            }
 
-            return $this->db->executeSQL_DML_last($sql);
-        } catch (Exception $e) {
-            handleException($e);
-            return false;
+            $sql = "INSERT INTO horario_doctor (id_doctor, dia_semana, hora_apertura, hora_cierre) 
+                    VALUES ($idDoctor, $diaSemana, '$horaApertura', '$horaCierre')";
+
+            $idHorario = $this->enlace->executeSQL_DML_last($sql);
+
+            return [
+                "id_horario" => $idHorario,
+                "mensaje" => "Horario registrado correctamente."
+            ];
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
         }
     }
 
     public function update($id, $data)
     {
         try {
-            $idSeguro = intval($id);
-            $diaSemana = intval($data->dia_semana);
-            $horaApertura = $this->db->escapeString($data->hora_apertura);
-            $horaCierre = $this->db->escapeString($data->hora_cierre);
+            $id = filter_var($id, FILTER_VALIDATE_INT);
+            $diaSemana = filter_var($data['dia_semana'], FILTER_VALIDATE_INT);
+            $horaApertura = $this->enlace->escapeString($data['hora_apertura']);
+            $horaCierre = $this->enlace->escapeString($data['hora_cierre']);
 
-            $sql = "UPDATE excepciones_horario 
-                    SET dia_semana = {$diaSemana}, 
-                        hora_apertura = '{$horaApertura}', 
-                        hora_cierre = '{$horaCierre}' 
-                    WHERE id_excepciones_horario = {$idSeguro}";
+            if (!$id || !$diaSemana) {
+                throw new InvalidArgumentException("El ID del horario y el día son obligatorios.");
+            }
 
-            return $this->db->executeSQL_DML($sql);
-        } catch (Exception $e) {
-            handleException($e);
-            return false;
+            $sql = "UPDATE horario_doctor 
+                    SET dia_semana = $diaSemana, 
+                        hora_apertura = '$horaApertura', 
+                        hora_cierre = '$horaCierre' 
+                    WHERE id_horario = $id";
+
+            $this->enlace->executeSQL_DML($sql);
+
+            return [
+                "id_horario" => $id,
+                "mensaje" => "Horario actualizado correctamente."
+            ];
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
         }
     }
 
     public function delete($id)
     {
         try {
-            $idSeguro = intval($id);
-            $sql = "DELETE FROM excepciones_horario WHERE id_excepciones_horario = {$idSeguro}";
-            return $this->db->executeSQL_DML($sql);
-        } catch (Exception $e) {
-            handleException($e);
-            return false;
+            $id = filter_var($id, FILTER_VALIDATE_INT);
+            $sql = "DELETE FROM horario_doctor WHERE id_horario = $id";
+            $this->enlace->executeSQL_DML($sql);
+
+            return [
+                "success" => true,
+                "id_horario" => $id,
+                "mensaje" => "Horario eliminado correctamente."
+            ];
+        } catch (Throwable $e) {
+            HandleException::logException($e);
+            throw $e;
         }
     }
 }

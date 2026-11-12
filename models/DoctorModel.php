@@ -9,10 +9,10 @@ class DoctorModel
         $this->enlace = new MySqlConnect();
     }
 
-    //Listar veterinarios
+    // Listar veterinarios
     public function getAll()
     {
-        try{
+        try {
             $vSql = "SELECT 
             d.id_doctor,
             u.id_usuario,
@@ -24,7 +24,6 @@ class DoctorModel
             u.fecha_nacimiento,
             d.especialidad,
             d.biografia,
-            d.id_excepciones_horario,
             d.activo
             FROM doctor d
             INNER JOIN usuario u ON d.id_usuario = u.id_usuario
@@ -37,13 +36,13 @@ class DoctorModel
         }
     }
 
-    //Obtener veterinario por ID
+    // Obtener veterinario por ID
     public function get($id)
     {
-        try{
+        try {
             $id = filter_var($id, FILTER_VALIDATE_INT);
 
-            if($id === false || $id <= 0) {
+            if ($id === false || $id <= 0) {
                 throw new InvalidArgumentException("El ID del veterinario no es válido");
             }
 
@@ -58,7 +57,6 @@ class DoctorModel
             u.fecha_nacimiento,
             d.especialidad,
             d.biografia,
-            d.id_excepciones_horario,
             d.activo
             FROM doctor d
             INNER JOIN usuario u ON d.id_usuario = u.id_usuario
@@ -66,13 +64,13 @@ class DoctorModel
 
             $vResultado = $this->enlace->executeSQL($vSql);
 
-            if(!empty($vResultado)) {
+            if (!empty($vResultado)) {
                 return $vResultado[0];
-            } 
+            }
 
             return null;       
         } catch (Exception $e) {
-        HandleException::logException($e);
+            HandleException::logException($e);
         }
     }
 
@@ -95,7 +93,6 @@ class DoctorModel
                 $data['contrasena'],
                 PASSWORD_DEFAULT
             );
-
             $contrasenaHash = $this->enlace->escapeString($contrasenaHash);
 
             $correoExiste = $this->enlace->executeSQL(
@@ -146,13 +143,11 @@ class DoctorModel
                 id_usuario,
                 especialidad,
                 biografia,
-                id_excepciones_horario,
                 activo
             ) VALUES (
                 $idUsuario,
                 '$especialidad',
                 '$biografia',
-                NULL,
                 1
             )";
 
@@ -175,7 +170,7 @@ class DoctorModel
         }
     }
 
-        // Actualizar veterinario
+    // Actualizar veterinario
     public function update($id, $data)
     {
         try {
@@ -203,21 +198,6 @@ class DoctorModel
 
             if (!filter_var($data['correo'], FILTER_VALIDATE_EMAIL)) {
                 throw new InvalidArgumentException("El correo electrónico no es válido.");
-            }
-
-            if (strlen($data['nombre']) > 100 ||
-                strlen($data['identificacion']) > 30 ||
-                strlen($data['telefono']) > 20 ||
-                strlen($data['correo']) > 150 ||
-                strlen($data['direccion']) > 100 ||
-                strlen($data['especialidad']) > 100) {
-                throw new InvalidArgumentException("Uno o más campos superan la longitud permitida.");
-            }
-
-            $fecha = DateTime::createFromFormat('Y-m-d', $data['fecha_nacimiento']);
-
-            if (!$fecha || $fecha->format('Y-m-d') !== $data['fecha_nacimiento']) {
-                throw new InvalidArgumentException("La fecha de nacimiento no es válida.");
             }
 
             $doctor = $this->get($id);
@@ -270,7 +250,6 @@ class DoctorModel
             $this->enlace->executeSQL_DML($sqlUsuario);
 
             if (!empty($data['contrasena'])) {
-
                 if (strlen($data['contrasena']) < 8) {
                     throw new InvalidArgumentException(
                         "La contraseña debe tener al menos 8 caracteres."
@@ -307,23 +286,19 @@ class DoctorModel
         }
     }
 
-        // Borrado lógico
+    // Borrado lógico
     public function delete($id)
     {
         $id = filter_var($id, FILTER_VALIDATE_INT);
 
         if ($id === false || $id <= 0) {
-            throw new InvalidArgumentException(
-                "El ID del veterinario no es válido."
-            );
+            throw new InvalidArgumentException("El ID del veterinario no es válido.");
         }
 
         $doctor = $this->get($id);
 
         if (!$doctor) {
-            throw new Exception(
-                "El veterinario no existe."
-            );
+            throw new Exception("El veterinario no existe.");
         }
 
         $sql = "UPDATE doctor
@@ -355,52 +330,8 @@ class DoctorModel
 
         foreach ($camposObligatorios as $campo) {
             if (!isset($data[$campo]) || trim((string)$data[$campo]) === '') {
-                throw new InvalidArgumentException(
-                    "El campo $campo es obligatorio."
-                );
+                throw new InvalidArgumentException("El campo $campo es obligatorio.");
             }
-        }
-
-        if (!filter_var($data['correo'], FILTER_VALIDATE_EMAIL)) {
-            throw new InvalidArgumentException("El correo electrónico no es válido.");
-        }
-
-        if (strlen($data['nombre']) > 100) {
-            throw new InvalidArgumentException("El nombre no puede superar 100 caracteres.");
-        }
-
-        if (strlen($data['identificacion']) > 30) {
-            throw new InvalidArgumentException("La identificación no puede superar 30 caracteres.");
-        }
-
-        if (strlen($data['telefono']) > 20) {
-            throw new InvalidArgumentException("El teléfono no puede superar 20 caracteres.");
-        }
-
-        if (strlen($data['correo']) > 150) {
-            throw new InvalidArgumentException("El correo no puede superar 150 caracteres.");
-        }
-
-        if (strlen($data['direccion']) > 100) {
-            throw new InvalidArgumentException("La dirección no puede superar 100 caracteres.");
-        }
-
-        if (strlen($data['especialidad']) > 100) {
-            throw new InvalidArgumentException("La especialidad no puede superar 100 caracteres.");
-        }
-
-        $fecha = DateTime::createFromFormat('Y-m-d', $data['fecha_nacimiento']);
-
-        if (!$fecha || $fecha->format('Y-m-d') !== $data['fecha_nacimiento']) {
-            throw new InvalidArgumentException("La fecha de nacimiento no es válida.");
-        }
-
-        if (strlen($data['contrasena']) < 8) {
-            throw new InvalidArgumentException("La contraseña debe tener al menos 8 caracteres.");
-        }
-
-        if (isset($data['biografia']) && strlen($data['biografia']) > 5000) {
-            throw new InvalidArgumentException("La biografía es demasiado extensa.");
         }
     }
 }
