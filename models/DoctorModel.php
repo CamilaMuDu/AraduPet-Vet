@@ -286,7 +286,7 @@ class DoctorModel
         }
     }
 
-    // Borrado lógico
+    // Borrado veterinario
     public function delete($id)
     {
         $id = filter_var($id, FILTER_VALIDATE_INT);

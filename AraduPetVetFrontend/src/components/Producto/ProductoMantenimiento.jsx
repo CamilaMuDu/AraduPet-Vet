@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import * as yup from 'yup';
@@ -104,7 +103,7 @@ export function ProductoMantenimiento() {
             setVistaPrevia(imagenActual);
         } else if (imagenActual) {
             setVistaPrevia(
-                `http://localhost/AraduPetVet/${imagenActual.replace(/^\/+/, '')}`
+                `${import.meta.env.VITE_BASE_URL}${imagenActual.replace(/^\/+/, '')}`
             );
         } else {
             setVistaPrevia('');
@@ -171,16 +170,10 @@ export function ProductoMantenimiento() {
         setMensaje('');
         setErrores({});
 
-        console.log('Botón Actualizar presionado');
-        console.log('Datos del producto:', producto);
-        console.log('Imagen seleccionada:', imagenArchivo);
-
         try {
             await esquemaValidacion.validate(producto, {
                 abortEarly: false
             });
-
-            console.log('Validación completada correctamente');
 
             setGuardando(true);
 
@@ -201,12 +194,12 @@ export function ProductoMantenimiento() {
             let respuesta;
 
             if (modoEdicion) {
+                datos.append('id_producto', id);
                 respuesta = await ProductoService.updateProducto(id, datos);
             } else {
                 respuesta = await ProductoService.createProducto(datos);
             }
 
-            console.log('Respuesta del servidor:', respuesta.data);
             if (respuesta.data?.status === 'error' || respuesta.data?.success === false) {
                 throw new Error(
                     respuesta.data?.message || 'No se pudo guardar el producto.'
@@ -223,7 +216,6 @@ export function ProductoMantenimiento() {
 
         } catch (err) {
             if (err instanceof yup.ValidationError) {
-                console.log('Errores de validación:', err.errors);
                 const nuevosErrores = {};
 
                 err.inner.forEach((validacion) => {
@@ -233,7 +225,6 @@ export function ProductoMantenimiento() {
                 });
 
                 setErrores(nuevosErrores);
-                console.log('Errores de Yup:', nuevosErrores);
             } else {
                 console.error('Error al guardar producto:', err);
 

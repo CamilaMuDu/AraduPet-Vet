@@ -19,7 +19,6 @@ class ServicioController
                 'results' => 'No se encontraron servicios o ocurrió un error'
             ];
         }
-
         echo json_encode($json, http_response_code($json['status']));
     }
 
@@ -42,7 +41,6 @@ class ServicioController
 
         echo json_encode($json, http_response_code($json['status']));
     }
-
     
     public function create()
     {
@@ -87,14 +85,11 @@ class ServicioController
     }
 
 
-    
     public function update($id)
     {
         try {
-            // Recibir los datos del formulario
             $data = $_POST;
 
-            // Recibir imagen nueva, si se seleccionó
             $imagen = $_FILES['imagen'] ?? null;
 
             if (
@@ -112,7 +107,6 @@ class ServicioController
 
             $servicioModel = new ServicioModel();
 
-            // Actualizar el servicio
             $resultado = $servicioModel->update($id, $data, $imagen);
 
             if ($resultado) {

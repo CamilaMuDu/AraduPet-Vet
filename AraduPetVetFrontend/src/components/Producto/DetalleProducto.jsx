@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Container from '@mui/material/Container';
@@ -42,7 +41,7 @@ export function DetalleProducto() {
             return ruta;
         }
 
-        return `http://localhost/AraduPetVet/${ruta.replace(/^\/+/, '')}`;
+        return `${import.meta.env.VITE_BASE_URL}${ruta.replace(/^\/+/, '')}`;
     };
 
     const formatoColones = (precio) => {

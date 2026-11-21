@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
     Card,
@@ -23,7 +22,7 @@ export const ListCardServicios = ({ servicio }) => {
             return ruta;
         }
 
-        return `http://localhost/AraduPetVet/${ruta.replace(/^\/+/, '')}`;
+        return `${import.meta.env.VITE_BASE_URL}${ruta.replace(/^\/+/, '')}`;
     };
 
     const imagenServicio = obtenerImagen(servicio.imagen_url);

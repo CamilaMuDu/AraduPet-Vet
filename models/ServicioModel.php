@@ -10,7 +10,7 @@ class ServicioModel
         $this->db = new MySqlConnect();
     }
 
-    // Obtener todos los servicios activos
+    // Obtener los servicios 
     public function getAll()
     {
         try {
@@ -56,7 +56,7 @@ class ServicioModel
         }
     }
 
-    // Crear servicio con imagen
+    // Crear servicio
     public function create($data, $imagen = null)
     {
         $imagenUrl = null;
@@ -103,7 +103,6 @@ class ServicioModel
             return $resultado;
 
         } catch (Exception $e) {
-            // Evitar dejar una imagen sin servicio asociado
             if ($imagenUrl !== null) {
                 $this->eliminarArchivo($imagenUrl);
             }
@@ -113,7 +112,7 @@ class ServicioModel
         }
     }
 
-    // Actualizar servicio con imagen
+    // Actualizar servicio 
     public function update($id, $data, $imagen = null)
     {
         $imagenNueva = null;
@@ -149,7 +148,6 @@ class ServicioModel
 
             $imagenNueva = $this->subirImagen($imagen);
 
-            // Conservar la imagen anterior si no hay una nueva
             $imagenUrl = $imagenNueva
                 ?? ($actual->imagen_url ?? null);
 
@@ -191,7 +189,7 @@ class ServicioModel
         }
     }
 
-    // Eliminación lógica del servicio
+    // Eliminación servicio
     public function delete($id)
     {
         try {
@@ -215,7 +213,7 @@ class ServicioModel
         }
     }
 
-    // Validar información del servicio
+    // Validar servicio
     private function validarDatos(
         $nombre, $descripcion, $precio,
         $duracion, $ayuno, $cita
@@ -256,7 +254,6 @@ class ServicioModel
         }
     }
 
-    // Subir imagen del servicio
     private function subirImagen($imagen)
     {
         if ($imagen === null ||
@@ -325,7 +322,6 @@ class ServicioModel
         return 'public/images/servicios/' . $nombreArchivo;
     }
 
-    // Eliminar archivo nuevo si falla el registro o actualización
     private function eliminarArchivo($ruta)
     {
         $prefijo = 'public/images/servicios/';

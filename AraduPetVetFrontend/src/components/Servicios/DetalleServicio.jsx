@@ -92,7 +92,7 @@ export const DetalleServicio = () => {
                                 src={
                                     servicio.imagen_url.startsWith('http')
                                         ? servicio.imagen_url
-                                        : `http://localhost/AraduPetVet/${servicio.imagen_url.replace(/^\/+/, '')}`
+                                        : `${import.meta.env.VITE_BASE_URL}${servicio.imagen_url.replace(/^\/+/, '')}`
                                 }
                                 alt={servicio.nombre}
                                 sx={{

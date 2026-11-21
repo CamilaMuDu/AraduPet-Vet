@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
     Box,
@@ -72,7 +71,7 @@ export const FormServicio = ({ initialData, onCancel, onSuccess }) => {
 
             const url = /^https?:\/\//i.test(ruta)
                 ? ruta
-                : `http://localhost/AraduPetVet/${ruta.replace(/^\/+/, '')}`;
+                : `${import.meta.env.VITE_BASE_URL}${ruta.replace(/^\/+/, '')}`;
 
             setVistaPrevia(url);
         } else {
@@ -155,6 +154,7 @@ export const FormServicio = ({ initialData, onCancel, onSuccess }) => {
             let respuesta;
 
             if (initialData?.id_servicio) {
+                datos.append('id_servicio', initialData.id_servicio);
                 respuesta = await ServicioService.updateServicio(
                     initialData.id_servicio,
                     datos

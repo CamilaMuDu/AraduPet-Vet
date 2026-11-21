@@ -11,7 +11,6 @@ class CitaModel
     }
 
     //getAll
-    
     public function all()
     {
         try {
@@ -57,7 +56,6 @@ class CitaModel
                     "El ID de la cita no es válido"
                 );
             }
-
             $vSql = "SELECT
                         c.id_cita,
                         c.fecha_cita,

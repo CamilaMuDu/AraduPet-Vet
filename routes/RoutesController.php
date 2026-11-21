@@ -5,14 +5,10 @@ class RoutesController
     private $protectedRoutes = [];
 
     public function __construct() {
-        // $this->authMiddleware = new AuthMiddleware();
-        // $this->registerRoutes();
         $this->routes();
     }
 
     private function registerRoutes() {
-        // Registrar rutas protegidas
-        //---------------------  Metodo,path (en minuscula),controlador, accion, array de nombres de roles
         $this->addProtectedRoute('GET', '/apimovie/actor', 'actor', 'index', ['Administrador']);
     }
 
@@ -20,10 +16,8 @@ class RoutesController
         $method = $_SERVER['REQUEST_METHOD'];
         $path = strtolower($_SERVER['REQUEST_URI']);
 
-        // Si la ruta es protegida, aplicar autenticación
         if ($this->isProtectedRoute($method, $path)) {
             $route = $this->protectedRoutes["$method:$path"];
-            //Verifica los roles autorizados con los del usuario del token
             if(!$this->authMiddleware->handle($route['requiredRole'])){
                 return;
             }
@@ -44,13 +38,11 @@ class RoutesController
     }
     public function index()
     {
-        //include "routes/routes.php";
+
         if (isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['REQUEST_URI'])) {
-            //Gestion de imagenes
             if (strpos($_SERVER['REQUEST_URI'], '/uploads/') === 0) {
                 $filePath = __DIR__ . $_SERVER['REQUEST_URI'];
                 
-                // Verificar si el archivo existe
                 if (file_exists($filePath)) {
                     header('Content-Type: ' . mime_content_type($filePath));
                     readfile($filePath);
@@ -60,10 +52,8 @@ class RoutesController
                     echo 'Archivo no encontrado.';
                 }
             }
-             //FIN Gestion de imagenes
-             //Solicitud preflight
+
              if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-                // Terminar la solicitud de preflight
                 http_response_code(200);
                 exit();
             }
