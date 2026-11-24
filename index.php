@@ -17,8 +17,10 @@ require_once "controllers/core/Logger.php";
 require_once "controllers/core/MySqlConnect.php";
 require_once "controllers/core/Request.php";
 require_once "controllers/core/Response.php";
+
 //Middleware
 require_once "middleware/AuthMiddleware.php";
+require_once 'middleware/UsuarioAuth.php';
 
 /***--- Agregar todos los modelos*/
 require_once __DIR__ . "/models/ProductoModel.php";
@@ -27,6 +29,7 @@ require_once __DIR__ . "/models/HorarioModel.php";
 require_once "models/FacturaModel.php";
 require_once "models/CitaModel.php";
 require_once __DIR__ . "/models/DoctorModel.php";
+require_once __DIR__ . "/models/UsuarioModel.php";
 
 
 /***--- Agregar todos los controladores*/
@@ -36,6 +39,7 @@ require_once __DIR__ . "/controllers/HorarioController.php";
 require_once "controllers/FacturaController.php";
 require_once "controllers/CitaController.php";
 require_once __DIR__ . "/controllers/DoctorController.php";
+require_once __DIR__ . "/controllers/UsuarioController.php";
 
 
 //Enrutador

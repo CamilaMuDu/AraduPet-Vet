@@ -7,7 +7,7 @@ import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import { Menu, MenuItem } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Badge from "@mui/material/Badge";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AccountCircle from "@mui/icons-material/AccountCircle";
@@ -17,8 +17,20 @@ import LiveTvIcon from "@mui/icons-material/LiveTv";
 import Tooltip from "@mui/material/Tooltip";
 import PetsIcon from "@mui/icons-material/Pets";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Header() {
+
+  const navigate = useNavigate();
+
+  const { usuario, logout } = useAuth();
+  const esAdministrador = usuario?.rol === "Administrador";
+
+  const esEncargado = usuario?.rol === "Encargado";
+
+  const esCliente = usuario?.rol === "Cliente";
+
+  const puedeGestionar = esAdministrador || esEncargado;
 
   const [anchorElUser, setAnchorEl] = React.useState(null);
 
@@ -48,6 +60,14 @@ export default function Header() {
     handleOpcionesMenuClose();
   };
 
+  const handleLogout = () => {
+    logout();
+
+    handleUserMenuClose();
+
+    navigate("/user/login", { replace: true });
+  };
+
   const handleOpenPrincipalMenu = (event) => {
     setAnchorElPrincipal(event.currentTarget);
   };
@@ -64,12 +84,6 @@ export default function Header() {
     setMobileMoreAnchorEl(null);
   };
 
-  const userItems = [
-    { name: "Login", link: "/user/login", login: false },
-    { name: "Registrarse", link: "/user/create", login: false },
-    { name: "Logout", link: "/user/logout", login: true },
-  ];
-
   const navItems = [
     { name: "Productos", link: "/productos" },
     { name: "Servicios", link: "/servicios/" },
@@ -82,6 +96,10 @@ export default function Header() {
     { name: "Servicios", link: "/servicios/mantenimiento" },
     { name: "Veterinarios", link: "/veterinarios/mantenimiento" },
     { name: "Horarios", link: "/horarios/mantenimiento" },
+
+    ...(esAdministrador
+      ? [{ name: "Usuarios", link: "/usuarios/mantenimiento" }]
+      : [])
   ];
 
   const menuIdPrincipal = "menu-appbar";
@@ -101,31 +119,37 @@ export default function Header() {
         </Button>
       ))}
 
-      <Button
-        color="primary"
-        onClick={handleOpenMantenimientos}
-        endIcon={<ArrowDropDownIcon />}
-      >
-        <Typography textAlign="center">Mantenimientos</Typography>
-      </Button>
-
-      <Menu
-        anchorEl={anchorElMantenimientos}
-        open={Boolean(anchorElMantenimientos)}
-        onClose={handleCloseMantenimientos}
-      >
-        {mantenimientoItems.map((item) => (
-          <MenuItem
-            key={item.name}
-            component={item.link !== "#" ? Link : "li"}
-            to={item.link !== "#" ? item.link : undefined}
-            disabled={item.link === "#"}
-            onClick={handleCloseMantenimientos}
+      {puedeGestionar && (
+        <>
+          <Button
+            color="primary"
+            onClick={handleOpenMantenimientos}
+            endIcon={<ArrowDropDownIcon />}
           >
-            {item.name}
-          </MenuItem>
-        ))}
-      </Menu>
+            <Typography sx={{ textAlign: "center" }}>
+              Mantenimientos
+            </Typography>
+          </Button>
+
+          <Menu
+            anchorEl={anchorElMantenimientos}
+            open={Boolean(anchorElMantenimientos)}
+            onClose={handleCloseMantenimientos}
+          >
+            {mantenimientoItems.map((item) => (
+              <MenuItem
+                key={item.name}
+                component={item.link !== "#" ? Link : "li"}
+                to={item.link !== "#" ? item.link : undefined}
+                disabled={item.link === "#"}
+                onClick={handleCloseMantenimientos}
+              >
+                {item.name}
+              </MenuItem>
+            ))}
+          </Menu>
+        </>
+      )}
 
       {navItems.slice(2).map((item, index) => (
         <Button
@@ -152,7 +176,7 @@ export default function Header() {
       <IconButton
         size="large"
         edge="end"
-        aria-label="account of current user"
+        aria-label="Usuario conectado"
         aria-controls={userMenuId}
         aria-haspopup="true"
         onClick={handleUserMenuOpen}
@@ -163,7 +187,7 @@ export default function Header() {
 
       <Menu
         sx={{ mt: "45px" }}
-        id="menu-appbar"
+        id={userMenuId}
         anchorEl={anchorElUser}
         anchorOrigin={{
           vertical: "top",
@@ -177,21 +201,25 @@ export default function Header() {
         open={Boolean(anchorElUser)}
         onClose={handleUserMenuClose}
       >
-        <MenuItem>
-          <Typography variant="subtitle1" gutterBottom>
-            Email usuario
+        <Box sx={{ px: 3, py: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+            {usuario?.nombre}
+          </Typography>
+
+          <Typography variant="body2" color="text.secondary">
+            {usuario?.correo}
+          </Typography>
+
+          <Typography variant="body2" color="primary">
+            Rol: {usuario?.rol}
+          </Typography>
+        </Box>
+
+        <MenuItem onClick={handleLogout}>
+          <Typography color="error">
+            Cerrar sesión
           </Typography>
         </MenuItem>
-
-        {userItems.map((setting, index) => {
-          return (
-            <MenuItem key={index} component={Link} to={setting.link}>
-              <Typography sx={{ textAlign: "center" }}>
-                {setting.name}
-              </Typography>
-            </MenuItem>
-          );
-        })}
       </Menu>
     </Box>
   );

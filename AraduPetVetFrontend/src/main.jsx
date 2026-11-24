@@ -1,33 +1,38 @@
+
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
 import { createBrowserRouter } from "react-router-dom";
-import Home from "./components/Home/Home";
 import { RouterProvider } from "react-router";
+import Home from "./components/Home/Home";
 import PageNotFound from "./components/Home/PageNotFound";
+import Layout from "./components/Layout/Layout";
+import { CatalogoProductos } from "./components/Producto/CatalogoProductos.jsx";
+import { DetalleProducto } from "./components/Producto/DetalleProducto.jsx";
+import { ProductoMantenimiento } from "./components/Producto/ProductoMantenimiento.jsx";
+import { ListaMantenimientoProductos } from "./components/Producto/ListaMantenimientoProductos.jsx";
+import { ListServicios } from "./components/Servicios/ListServicios.jsx";
+import { CatalogoServicios } from "./components/Servicios/CatalogoServicios.jsx";
+import { DetalleServicio } from "./components/Servicios/DetalleServicio.jsx";
+import Citas from "./components/Citas/Citas.jsx";
+import DetalleCita from "./components/Citas/DetalleCita";
+import { ListaFacturas } from "./components/Factura/ListaFacturas.jsx";
+import { DetalleFactura } from "./components/Factura/DetalleFactura.jsx";
+import { ListaMantenimientoDoctores } from "./components/Doctor/ListaMantenimientoDoctores";
+import { DoctorMantenimiento } from "./components/Doctor/DoctorMantenimiento.jsx";
+import { ListaMantenimientoHorarios } from "./components/Doctor/ListaMantenimientoHorarios.jsx";
+import { DetalleDoctor } from "./components/Doctor/DetalleDoctor";
+import { DetalleHorario } from "./components/Doctor/DetalleHorario";
+import Login from "./components/Usuario/Login.jsx";
+import Registro from "./components/Usuario/Registro.jsx";
+import RutaProtegida from "./components/Usuario/RutaProtegida.jsx";
+import RutaRol from "./components/Usuario/RutaRol.jsx";
 import TableMovies from "./components/Movie/TableMovies";
 import { ListMovies } from "./components/Movie/listMovies.jsx";
 import { DetailMovie } from "./components/Movie/detailMovie.jsx";
 import { CatalogMovies } from "./components/Movie/catalogoMovies.jsx";
-import Layout from './components/Layout/Layout';
-import { CatalogoProductos } from "./components/Producto/CatalogoProductos.jsx";
-import { DetalleProducto } from './components/Producto/DetalleProducto.jsx';
-import { ProductoMantenimiento } from "./components/Producto/ProductoMantenimiento.jsx";
-import Citas from "./components/Citas/Citas.jsx";
-import { ListaFacturas } from './components/Factura/ListaFacturas.jsx';
-import { DetalleFactura } from './components/Factura/DetalleFactura.jsx';
-import DetalleCita from './components/Citas/DetalleCita';
-import { ListaMantenimientoProductos } from './components/Producto/ListaMantenimientoProductos.jsx';
-import { ListServicios } from './components/Servicios/ListServicios.jsx';
-import { ListaMantenimientoDoctores } from './components/Doctor/ListaMantenimientoDoctores';
-import { DoctorMantenimiento } from './components/Doctor/DoctorMantenimiento.jsx';
-import { ListaMantenimientoHorarios } from './components/Doctor/ListaMantenimientoHorarios.jsx';
-import { CatalogoServicios } from './components/Servicios/CatalogoServicios.jsx';
-import { DetalleServicio } from './components/Servicios/DetalleServicio.jsx';
-import { DetalleDoctor } from './components/Doctor/DetalleDoctor';
-import { DetalleHorario } from './components/Doctor/DetalleHorario';
-
+import ListaUsuarios from "./components/Usuario/ListaUsuarios";
 
 
 const rutas = createBrowserRouter([
@@ -35,103 +40,134 @@ const rutas = createBrowserRouter([
     element: <App />,
     children: [
       {
-        element: <Layout />,
+        path: "/user/login",
+        element: <Login />,
+      },
+      {
+        path: "/user/registro",
+        element: <Registro />,
+      },
+      {
+        element: <RutaProtegida />,
         children: [
           {
-            path: '/',
-            element: <Home />,
-          },
-          {
-            path: '/citas',
-            element: <Citas />,
-          },
-          {
-            path: 'citas/detalle/:id',
-            element: <DetalleCita />
-          },
-          {
-            path: '/productos',
-            element: <CatalogoProductos />,
-          },
-          {
-            path: '/productos/mantenimiento',
-            element: <ListaMantenimientoProductos />,
-          },
-          {
-            path: '/productos/crear',
-            element: <ProductoMantenimiento />,
-          },
-          {
-            path: '/productos/editar/:id',
-            element: <ProductoMantenimiento />,
-          },
-          {
-            path: '/productos/:id',
-            element: <DetalleProducto />,
-          },
-          {
-            path: '/servicios',
-            element: <CatalogoServicios />,
-          },
-          {
-            path: '/servicios/:id',
-            element: <DetalleServicio />,
-          },
-          {
-            path: '/Servicios/mantenimiento',
-            element: <ListServicios />,
-          },
-          {
-            path: '/horarios/mantenimiento',
-            element: <ListaMantenimientoHorarios />,
-          },
-          {
-            path: '/horarios/detalle/:id',
-            element: <DetalleHorario />,
-          },
-          {
-            path: '/facturas',
-            element: <ListaFacturas />,
-          },
-          {
-            path: '/facturas/:id',
-            element: <DetalleFactura />,
-          },
-          {
-            path: '/veterinarios/mantenimiento',
-            element: <ListaMantenimientoDoctores />,
-          },
-          {
-            path: '/doctores/crear',
-            element: <DoctorMantenimiento />,
-          },
-          {
-            path: '/doctores/editar/:id',
-            element: <DoctorMantenimiento />,
-          },
-          {
-            path: 'veterinarios/detalle/:id',
-            element: <DetalleDoctor />,
-          },
-          {
-            path: '/catalog-movies/',
-            element: <CatalogMovies />,
-          },
-          {
-            path: '/movie/',
-            element: <ListMovies />,
-          },
-          {
-            path: '/movie/:id',
-            element: <DetailMovie />,
-          },
-          {
-            path: '/movie-table',
-            element: <TableMovies />,
-          },
-          {
-            path: '*',
-            element: <PageNotFound />,
+            element: <Layout />,
+            children: [
+              {
+                path: "/",
+                element: <Home />,
+              },
+              {
+                path: "/citas",
+                element: <Citas />,
+              },
+              {
+                path: "/citas/detalle/:id",
+                element: <DetalleCita />,
+              },
+              {
+                path: "/productos",
+                element: <CatalogoProductos />,
+              },
+              {
+                path: "/productos/:id",
+                element: <DetalleProducto />,
+              },
+              {
+                path: "/servicios",
+                element: <CatalogoServicios />,
+              },
+              {
+                path: "/servicios/:id",
+                element: <DetalleServicio />,
+              },
+              {
+                path: "/facturas",
+                element: <ListaFacturas />,
+              },
+              {
+                path: "/facturas/:id",
+                element: <DetalleFactura />,
+              },
+              {
+                element: (
+                  <RutaRol
+                    rolesPermitidos={["Administrador", "Encargado"]}
+                  />
+                ),
+                children: [
+                  {
+                    path: "/productos/mantenimiento",
+                    element: <ListaMantenimientoProductos />,
+                  },
+                  {
+                    path: "/productos/crear",
+                    element: <ProductoMantenimiento />,
+                  },
+                  {
+                    path: "/productos/editar/:id",
+                    element: <ProductoMantenimiento />,
+                  },
+                  {
+                    path: "/servicios/mantenimiento",
+                    element: <ListServicios />,
+                  },
+                  {
+                    path: "/horarios/mantenimiento",
+                    element: <ListaMantenimientoHorarios />,
+                  },
+                  {
+                    path: "/horarios/detalle/:id",
+                    element: <DetalleHorario />,
+                  },
+                  {
+                    path: "/veterinarios/mantenimiento",
+                    element: <ListaMantenimientoDoctores />,
+                  },
+                  {
+                    path: "/doctores/crear",
+                    element: <DoctorMantenimiento />,
+                  },
+                  {
+                    path: "/doctores/editar/:id",
+                    element: <DoctorMantenimiento />,
+                  },
+                  {
+                    path: "/veterinarios/detalle/:id",
+                    element: <DetalleDoctor />,
+                  },
+                ],
+              },
+              {
+                element: <RutaRol rolesPermitidos={["Administrador"]} />,
+                children: [
+                  {
+                    path: "/usuarios/mantenimiento",
+                    element: <ListaUsuarios />
+                  }
+                ]
+              },
+              {
+                path: "/catalog-movies/",
+                element: <CatalogMovies />,
+              },
+              {
+                path: "/movie/",
+                element: <ListMovies />,
+              },
+              {
+                path: "/movie/:id",
+                element: <DetailMovie />,
+              },
+              {
+                path: "/movie-table",
+                element: <TableMovies />,
+              },
+              {
+                path: "*",
+                element: <PageNotFound />,
+              },
+            ],
           },
         ],
       },
@@ -139,8 +175,9 @@ const rutas = createBrowserRouter([
   },
 ]);
 
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <RouterProvider router={rutas} />
-  </StrictMode>,
+  </StrictMode>
 );
