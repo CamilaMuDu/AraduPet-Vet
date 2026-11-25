@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import FacturaService from '../../services/FacturaService';
+import { useAuth } from '../../context/AuthContext';
 
 const formatoColones = (valor) => {
     return new Intl.NumberFormat('es-CR', {
@@ -30,39 +31,90 @@ const formatoColones = (valor) => {
     }).format(Number(valor));
 };
 
+const formatoFecha = (valor) => {
+    if (!valor) return 'No registrada';
+
+    const fecha = new Date(valor.replace(' ', 'T'));
+
+    return new Intl.DateTimeFormat('es-CR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    }).format(fecha);
+};
+
 export function DetalleFactura() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { token } = useAuth();
 
     const [factura, setFactura] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
+        if (!token) {
+            setFactura(null);
+            setError('Debe iniciar sesión.');
+            setLoading(false);
+            return;
+        }
+
+        let activo = true;
+
         setLoading(true);
         setError('');
+        setFactura(null);
 
-        FacturaService.getFacturaById(id)
+        FacturaService.getFacturaById(id, token)
             .then((response) => {
-                setFactura(response.data);
+                if (activo) {
+                    setFactura(response.data);
+                }
             })
-            .catch(() => {
-                setError('No se pudo cargar la proforma.');
+            .catch((error) => {
+                if (!activo) return;
+
+                if (error.response?.status === 404) {
+                    setError('La factura solicitada no está disponible.');
+                } else {
+                    setError(
+                        error.response?.data?.result ||
+                        'No se pudo cargar la factura.'
+                    );
+                }
             })
             .finally(() => {
-                setLoading(false);
+                if (activo) {
+                    setLoading(false);
+                }
             });
-    }, [id]);
+
+        return () => {
+            activo = false;
+        };
+
+    }, [id, token]);
 
     const colorEstado = (estado) => {
         switch (String(estado).trim().toLowerCase()) {
+            case 'facturado':
             case 'pagada':
                 return 'success';
+
+            case 'proforma':
+                return 'info';
+
             case 'pendiente':
                 return 'warning';
+
             case 'anulada':
             case 'cancelada':
                 return 'error';
+
             default:
                 return 'default';
         }
@@ -80,7 +132,7 @@ export function DetalleFactura() {
         return (
             <Container sx={{ mt: 6 }}>
                 <Alert severity="error">
-                    {error || 'Proforma no encontrada.'}
+                    {error || 'Factura no encontrada.'}
                 </Alert>
                 <Button
                     sx={{ mt: 3 }}
@@ -116,7 +168,8 @@ export function DetalleFactura() {
                                 fontWeight: 'bold'
                             }}
                         >
-                            Proforma N.º {factura.id_factura}
+                            {factura.estado === 'Proforma' ? 'Proforma' : 'Factura'}
+                            {' N.º '}{factura.id_factura}
                         </Typography>
 
                         <Typography
@@ -162,13 +215,17 @@ export function DetalleFactura() {
                             <strong>Veterinario:</strong> {factura.doctor || 'No asignado'}
                         </Typography>
                         <Typography sx={{ mb: 1 }}>
+                            <strong>Encargado:</strong>{' '}
+                            {factura.encargado || 'No registrado'}
+                        </Typography>
+                        <Typography sx={{ mb: 1 }}>
                             <strong>Dirección:</strong> {factura.direccion}
                         </Typography>
                     </Grid>
 
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ mb: 1 }}>
-                            <strong>Fecha:</strong> {factura.fecha}
+                            <strong>Fecha:</strong> {formatoFecha(factura.fecha)}
                         </Typography>
 
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -176,6 +233,22 @@ export function DetalleFactura() {
                             <Chip
                                 label={factura.estado}
                                 color={colorEstado(factura.estado)}
+                                size="small"
+                            />
+                        </Box>
+                        <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            mt: 2
+                        }}>
+                            <Typography fontWeight="bold">
+                                Estado de pago:
+                            </Typography>
+
+                            <Chip
+                                label={factura.estado_pago || 'No aplica'}
+                                color={colorEstado(factura.estado_pago)}
                                 size="small"
                             />
                         </Box>

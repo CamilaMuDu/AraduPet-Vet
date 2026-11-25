@@ -4,17 +4,19 @@ import {
     CardContent,
     Typography,
     Box,
-    IconButton
+    IconButton, Button
 } from '@mui/material';
 
 import InfoIcon from '@mui/icons-material/Info';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import { useCart } from '../../hooks/useCart';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import { useNavigate } from 'react-router-dom';
 
 export const ListCardServicios = ({ servicio }) => {
     const navigate = useNavigate();
+    const { addItem } = useCart();
 
-    // Construir la URL completa de la imagen
     const obtenerImagen = (ruta) => {
         if (!ruta) return null;
 
@@ -39,7 +41,6 @@ export const ListCardServicios = ({ servicio }) => {
                 overflow: 'hidden'
             }}
         >
-            {/* Encabezado azul claro */}
             <Box
                 sx={{
                     backgroundColor: '#81d4fa',
@@ -67,7 +68,6 @@ export const ListCardServicios = ({ servicio }) => {
                 </Typography>
             </Box>
 
-            {/* Imagen del servicio */}
             <Box
                 sx={{
                     height: 140,
@@ -106,7 +106,6 @@ export const ListCardServicios = ({ servicio }) => {
                 )}
             </Box>
 
-            {/* Descripción y precio */}
             <CardContent
                 sx={{
                     pt: 1,
@@ -157,7 +156,6 @@ export const ListCardServicios = ({ servicio }) => {
                 </Box>
             </CardContent>
 
-            {/* Botón para ver detalles */}
             <Box
                 sx={{
                     backgroundColor: '#e0e0e0',
@@ -167,6 +165,14 @@ export const ListCardServicios = ({ servicio }) => {
                     py: 0.5
                 }}
             >
+                <Button
+                    size="small"
+                    color="primary"
+                    startIcon={<AddShoppingCartIcon />}
+                    onClick={() => addItem(servicio)}
+                >
+                    Agregar al carrito
+                </Button>
                 <IconButton
                     size="small"
                     onClick={() =>

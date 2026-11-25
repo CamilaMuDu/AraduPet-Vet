@@ -26,21 +26,22 @@ require_once 'middleware/UsuarioAuth.php';
 require_once __DIR__ . "/models/ProductoModel.php";
 require_once __DIR__ . "/models/ServicioModel.php";
 require_once __DIR__ . "/models/HorarioModel.php";
+require_once __DIR__ . "/models/ExcepcionesHorarioModel.php";
 require_once "models/FacturaModel.php";
-require_once "models/CitaModel.php";
 require_once __DIR__ . "/models/DoctorModel.php";
 require_once __DIR__ . "/models/UsuarioModel.php";
+require_once __DIR__ . "/models/ReservaModel.php";
 
 
 /***--- Agregar todos los controladores*/
 require_once __DIR__ . "/controllers/ProductoController.php";
 require_once __DIR__ . "/controllers/ServicioController.php";
 require_once __DIR__ . "/controllers/HorarioController.php";
+require_once __DIR__ . "/controllers/ExcepcionesHorarioController.php";
 require_once "controllers/FacturaController.php";
-require_once "controllers/CitaController.php";
 require_once __DIR__ . "/controllers/DoctorController.php";
 require_once __DIR__ . "/controllers/UsuarioController.php";
-
+require_once __DIR__ . "/controllers/ReservaController.php";
 
 //Enrutador
 require_once "routes/RoutesController.php";

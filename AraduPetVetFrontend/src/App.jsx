@@ -2,7 +2,13 @@
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 import theme from './themes/theme';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
+
+function CarritoPorUsuario({ children }) {
+  const { usuario } = useAuth();
+  return <CartProvider key={usuario?.id_usuario || 'invitado'}>{children}</CartProvider>;
+}
 
 function App() {
   return (
@@ -10,7 +16,7 @@ function App() {
       <CssBaseline />
 
       <AuthProvider>
-        <Outlet />
+        <CarritoPorUsuario><Outlet /></CarritoPorUsuario>
       </AuthProvider>
 
     </ThemeProvider>

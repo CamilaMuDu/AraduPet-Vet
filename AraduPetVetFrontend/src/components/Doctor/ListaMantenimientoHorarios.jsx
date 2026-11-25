@@ -1,291 +1,1175 @@
 import React, { useEffect, useState } from 'react';
 import {
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    Paper, IconButton, Typography, Box, Button, CircularProgress, Alert,
-    FormControl, InputLabel, Select, MenuItem, TextField, Grid, Card, CardContent
+    Box, Typography, Button, Alert, CircularProgress,
+    FormControl, InputLabel, Select, MenuItem,
+    Table, TableHead, TableBody, TableRow, TableCell,
+    TableContainer, Paper, IconButton, Card, CardContent,
+    TextField, Stack, Tabs, Tab
 } from '@mui/material';
+
+import AddIcon from '@mui/icons-material/Add';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
+
+import { useNavigate, useLocation } from 'react-router-dom';
+
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import * as yup from 'yup';
+
 import HorarioService from '../../services/HorarioService';
 import DoctorService from '../../services/DoctorService';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import { useNavigate } from 'react-router-dom';
+import ExcepcionesHorarioService from '../../services/ExcepcionesHorarioService';
+
+dayjs.extend(customParseFormat);
 
 const DIAS_SEMANA = [
-    { id: 1, nombre: 'Lunes' },
-    { id: 2, nombre: 'Martes' },
-    { id: 3, nombre: 'Miércoles' },
-    { id: 4, nombre: 'Jueves' },
-    { id: 5, nombre: 'Viernes' },
-    { id: 6, nombre: 'Sábado' },
-    { id: 7, nombre: 'Domingo' }
+    'Lunes', 'Martes', 'Miércoles', 'Jueves',
+    'Viernes', 'Sábado', 'Domingo'
 ];
 
-export function ListaMantenimientoHorarios() {
-    const [horarios, setHorarios] = useState([]);
-    const [doctores, setDoctores] = useState([]);
-    const [selectedDoctor, setSelectedDoctor] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const navigate = useNavigate();
+const extraerLista = (data, propiedad) => {
+    const resultado = data?.results ?? data?.result ?? data;
 
-    const [showForm, setShowForm] = useState(false);
+    if (Array.isArray(resultado)) return resultado;
+
+    if (Array.isArray(resultado?.[propiedad])) {
+        return resultado[propiedad];
+    }
+
+    return [];
+};
+
+const formatearFecha = (fecha) => {
+    if (!fecha) return '-';
+
+    const partes = fecha.substring(0, 10).split('-');
+
+    return partes.length === 3
+        ? `${partes[2]}/${partes[1]}/${partes[0]}`
+        : fecha;
+};
+
+const obtenerMensajeError = (error) => {
+    const respuesta = error.response?.data;
+
+    return respuesta?.mensaje ||
+        respuesta?.message ||
+        (typeof respuesta === 'string' ? respuesta : null) ||
+        'Ocurrió un error al procesar la solicitud.';
+};
+
+const esquemaHorario = yup.object({
+    dia_semana: yup.number()
+        .integer()
+        .min(1)
+        .max(7)
+        .required('Debe seleccionar un día.'),
+
+    hora_apertura: yup.string()
+        .required('Debe indicar la hora de inicio.'),
+
+    hora_cierre: yup.string()
+        .required('Debe indicar la hora de cierre.')
+        .test(
+            'hora-mayor',
+            'La hora de cierre debe ser posterior al inicio.',
+            function (valor) {
+                if (!valor || !this.parent.hora_apertura) {
+                    return true;
+                }
+
+                return valor > this.parent.hora_apertura;
+            }
+        )
+});
+
+const esquemaBloqueo = yup.object({
+    id_doctor: yup.number()
+        .integer()
+        .positive()
+        .required('Debe seleccionar un veterinario.'),
+
+    fecha: yup.string()
+        .required('Debe seleccionar una fecha.')
+        .test(
+            'fecha-valida',
+            'La fecha no es válida.',
+            (valor) => {
+                return Boolean(
+                    valor &&
+                    dayjs(valor, 'YYYY-MM-DD', true).isValid()
+                );
+            }
+        )
+        .test(
+            'fecha-vigente',
+            'No se permiten fechas anteriores a hoy.',
+            (valor) => {
+                if (
+                    !valor ||
+                    !dayjs(valor, 'YYYY-MM-DD', true).isValid()
+                ) {
+                    return true;
+                }
+
+                return !dayjs(valor).isBefore(dayjs(), 'day');
+            }
+        ),
+
+    hora_apertura: yup.string()
+        .required('Debe indicar la hora de inicio.')
+        .matches(
+            /^([01]\d|2[0-3]):[0-5]\d$/,
+            'La hora debe tener el formato HH:MM.'
+        ),
+
+    hora_cierre: yup.string()
+        .required('Debe indicar la hora de finalización.')
+        .matches(
+            /^([01]\d|2[0-3]):[0-5]\d$/,
+            'La hora debe tener el formato HH:MM.'
+        )
+        .test(
+            'hora-mayor',
+            'La hora final debe ser posterior a la inicial.',
+            function (valor) {
+                if (!valor || !this.parent.hora_apertura) {
+                    return true;
+                }
+
+                return valor > this.parent.hora_apertura;
+            }
+        ),
+
+    motivo: yup.string()
+        .max(150, 'Máximo 150 caracteres.')
+        .nullable()
+});
+
+const obtenerErroresYup = (error) => {
+    const nuevosErrores = {};
+
+    error.inner.forEach(item => {
+        if (item.path && !nuevosErrores[item.path]) {
+            nuevosErrores[item.path] = item.message;
+        }
+    });
+
+    return nuevosErrores;
+};
+
+export function ListaMantenimientoHorarios() {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const [vista, setVista] = useState(
+        location.state?.vista === 'bloqueos' ? 1 : 0
+    );
+
+    const [doctores, setDoctores] = useState([]);
+    const [horarios, setHorarios] = useState([]);
+    const [bloqueos, setBloqueos] = useState([]);
+
+    const [selectedDoctor, setSelectedDoctor] = useState(
+        location.state?.idDoctor || ''
+    );
+
+    const [loading, setLoading] = useState(true);
+    const [guardando, setGuardando] = useState(false);
+    const [error, setError] = useState('');
+    const [mensaje, setMensaje] = useState(
+        location.state?.mensaje || ''
+    );
+    const [errores, setErrores] = useState({});
+
+    const [showForm, setShowForm] = useState(null);
     const [editId, setEditId] = useState(null);
+
     const [formData, setFormData] = useState({
         dia_semana: 1,
         hora_apertura: '08:00',
         hora_cierre: '17:00'
     });
 
-    const loadData = async () => {
+    const [formBloqueo, setFormBloqueo] = useState({
+        id_doctor: '',
+        fecha: '',
+        hora_apertura: '',
+        hora_cierre: '',
+        motivo: ''
+    });
+
+    const cargarDatos = async () => {
         try {
             setLoading(true);
-            const [resHorarios, resDoctores] = await Promise.all([
-                HorarioService.getHorarios(),
-                DoctorService.getDoctores()
-            ]);
+            setError('');
 
-            console.log("Respuesta raw de Horarios:", resHorarios.data);
-            console.log("Respuesta raw de Doctores:", resDoctores.data);
+            const [resHorarios, resDoctores, resBloqueos] =
+                await Promise.all([
+                    HorarioService.getHorarios(),
+                    DoctorService.getDoctores(),
+                    ExcepcionesHorarioService.getBloqueos()
+                ]);
 
-            // Extraer datos asegurando compatibilidad con la envoltura del Response PHP
-            const rawHorarios = resHorarios.data?.results || resHorarios.data?.result || resHorarios.data || [];
-            const rawDoctores = resDoctores.data?.results || resDoctores.data?.result || resDoctores.data || [];
+            const listaHorarios = extraerLista(
+                resHorarios.data, 'horarios'
+            );
 
-            const dataHorarios = Array.isArray(rawHorarios) ? rawHorarios : [];
-            const dataDoctores = Array.isArray(rawDoctores) ? rawDoctores : [];
+            const listaDoctores = extraerLista(
+                resDoctores.data, 'doctores'
+            );
 
-            setHorarios(dataHorarios);
-            setDoctores(dataDoctores);
+            const listaBloqueos = extraerLista(
+                resBloqueos.data, 'bloqueos'
+            );
 
-            // Seleccionar al primer doctor si aún no se ha seleccionado ninguno
-            if (dataDoctores.length > 0 && !selectedDoctor) {
-                setSelectedDoctor(String(dataDoctores[0].id_doctor));
-            }
+            setHorarios(listaHorarios);
+            setDoctores(listaDoctores);
+            setBloqueos(listaBloqueos);
 
-            setError(null);
+            setSelectedDoctor(actual => {
+                const existe = listaDoctores.some(
+                    d => String(d.id_doctor) === String(actual)
+                );
+
+                if (existe) return actual;
+
+                return listaDoctores.length > 0
+                    ? String(listaDoctores[0].id_doctor)
+                    : '';
+            });
+
         } catch (err) {
-            console.error("Error al cargar mantenimientos de horarios:", err);
-            setError("No se pudieron cargar los registros de horarios.");
+            console.error('Error al cargar horarios:', err);
+            setError(obtenerMensajeError(err));
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        loadData();
+        cargarDatos();
     }, []);
 
-    const handleCreate = () => {
+    const doctorActual = doctores.find(
+        d => String(d.id_doctor) === String(selectedDoctor)
+    );
+
+    const horariosFiltrados = horarios.filter(
+        h => String(h.id_doctor) === String(selectedDoctor)
+    );
+
+    const bloqueosFiltrados = bloqueos.filter(
+        b => String(b.id_doctor) === String(selectedDoctor)
+    );
+
+    const actualizarHorario = (campo, valor) => {
+        setFormData(actual => ({
+            ...actual,
+            [campo]: valor
+        }));
+
+        setErrores(actual => ({
+            ...actual,
+            [campo]: ''
+        }));
+    };
+
+    const actualizarBloqueo = (campo, valor) => {
+        setFormBloqueo(actual => ({
+            ...actual,
+            [campo]: valor
+        }));
+
+        setErrores(actual => ({
+            ...actual,
+            [campo]: ''
+        }));
+
+        setError('');
+    };
+
+    const crearHorario = () => {
         setEditId(null);
-        setFormData({ dia_semana: 1, hora_apertura: '08:00', hora_cierre: '17:00' });
-        setShowForm(true);
-    };
 
-    const handleEdit = (horario) => {
-        const idClave = horario.id_horario || horario.id_excepciones_horario;
-        setEditId(idClave);
         setFormData({
-            dia_semana: horario.dia_semana,
-            hora_apertura: horario.hora_apertura,
-            hora_cierre: horario.hora_cierre
+            dia_semana: 1,
+            hora_apertura: '08:00',
+            hora_cierre: '17:00'
         });
-        setShowForm(true);
+
+        setErrores({});
+        setError('');
+        setMensaje('');
+        setShowForm('horario');
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const editarHorario = (horario) => {
+        setEditId(horario.id_horario);
 
-        if (formData.hora_apertura >= formData.hora_cierre) {
-            alert("La hora de inicio debe ser anterior a la hora de cierre.");
+        setFormData({
+            dia_semana: Number(horario.dia_semana),
+            hora_apertura: horario.hora_apertura.substring(0, 5),
+            hora_cierre: horario.hora_cierre.substring(0, 5)
+        });
+
+        setErrores({});
+        setError('');
+        setMensaje('');
+        setShowForm('horario');
+    };
+
+    const crearBloqueo = () => {
+        setFormBloqueo({
+            id_doctor: Number(selectedDoctor),
+            fecha: '',
+            hora_apertura: '',
+            hora_cierre: '',
+            motivo: ''
+        });
+
+        setErrores({});
+        setError('');
+        setMensaje('');
+        setShowForm('bloqueo');
+    };
+
+    const cancelarFormulario = () => {
+        setShowForm(null);
+        setErrores({});
+        setError('');
+    };
+
+    const guardarHorario = async (event) => {
+        event.preventDefault();
+
+        if (guardando) return;
+
+        setError('');
+        setErrores({});
+
+        try {
+            await esquemaHorario.validate(formData, {
+                abortEarly: false
+            });
+
+            setGuardando(true);
+
+            if (editId !== null) {
+                await HorarioService.updateHorario(
+                    editId,
+                    formData
+                );
+            } else {
+                await HorarioService.createHorario({
+                    ...formData,
+                    id_doctor: Number(selectedDoctor)
+                });
+            }
+
+            await cargarDatos();
+
+            setShowForm(null);
+            setMensaje('Horario guardado correctamente.');
+
+        } catch (err) {
+            if (err instanceof yup.ValidationError) {
+                setErrores(obtenerErroresYup(err));
+            } else {
+                setError(obtenerMensajeError(err));
+            }
+        } finally {
+            setGuardando(false);
+        }
+    };
+
+    const guardarBloqueo = async (event) => {
+        event.preventDefault();
+
+        if (guardando) return;
+
+        setError('');
+        setErrores({});
+
+        try {
+            await esquemaBloqueo.validate(formBloqueo, {
+                abortEarly: false
+            });
+
+            setGuardando(true);
+
+            await ExcepcionesHorarioService.createBloqueo({
+                ...formBloqueo,
+                id_doctor: Number(selectedDoctor)
+            });
+
+            await cargarDatos();
+
+            setShowForm(null);
+            setVista(1);
+            setMensaje('Bloqueo registrado correctamente.');
+
+        } catch (err) {
+            if (err instanceof yup.ValidationError) {
+                setErrores(obtenerErroresYup(err));
+            } else {
+                setError(obtenerMensajeError(err));
+            }
+        } finally {
+            setGuardando(false);
+        }
+    };
+
+    const eliminarHorario = async (id) => {
+        if (!window.confirm('¿Desea eliminar este horario?')) {
             return;
         }
 
         try {
-            if (editId) {
-                await HorarioService.updateHorario(editId, formData);
-            } else {
-                await HorarioService.createHorario({ ...formData, id_doctor: selectedDoctor });
-            }
-            setShowForm(false);
-            loadData();
+            setError('');
+
+            await HorarioService.deleteHorario(id);
+            await cargarDatos();
+
+            setMensaje('Horario eliminado correctamente.');
+
         } catch (err) {
-            console.error("Error al guardar horario:", err);
-            alert("Ocurrió un error al guardar el horario.");
+            setError(obtenerMensajeError(err));
         }
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm("¿Desea eliminar este registro de horario?")) {
-            try {
-                await HorarioService.deleteHorario(id);
-                loadData();
-            } catch (err) {
-                console.error("Error al eliminar horario:", err);
+    const eliminarBloqueo = async (id) => {
+        if (!window.confirm(
+            '¿Desea eliminar este bloqueo de horario?'
+        )) {
+            return;
+        }
+
+        try {
+            setError('');
+
+            await ExcepcionesHorarioService.deleteBloqueo(id);
+            await cargarDatos();
+
+            setMensaje('Bloqueo eliminado correctamente.');
+
+        } catch (err) {
+            setError(obtenerMensajeError(err));
+        }
+    };
+
+    const verDetalleBloqueo = (id) => {
+        navigate(`/horarios/bloqueos/detalle/${id}`, {
+            state: {
+                idDoctor: selectedDoctor,
+                vista: 'bloqueos'
             }
-        }
+        });
     };
-
-    const doctorActual = doctores.find(d => String(d.id_doctor) === String(selectedDoctor));
-
-    // Filtrado robusto por id_doctor
-    const horariosFiltrados = horarios.filter(h => {
-        if (!selectedDoctor) return true;
-        return String(h.id_doctor) === String(selectedDoctor);
-    });
 
     if (loading) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', my: 5 }}>
+            <Box display="flex" justifyContent="center" my={5}>
                 <CircularProgress />
             </Box>
         );
     }
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h4" component="h1" color="primary">
-                    Mantenimiento de Horarios por Veterinario
-                </Typography>
-                {!showForm && (
-                    <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleCreate}>
-                        Nuevo Horario
-                    </Button>
-                )}
-            </Box>
+        <Box sx={{ p: 3, mb: 4 }}>
 
-            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            {/* Título principal del mantenimiento */}
+            <Typography
+                variant="h4"
+                component="h1"
+                color="primary"
+                sx={{
+                    mb: 4,
+                    textAlign: 'left'
+                }}
+            >
+                Mantenimiento de Horarios por Veterinario
+            </Typography>
 
-            {showForm ? (
-                <Card elevation={3} sx={{ mb: 4, p: 2 }}>
-                    <CardContent>
-                        <Typography variant="h6" mb={2}>
-                            {editId ? "Modificar Horario" : `Registrar Nuevo Horario para: ${doctorActual?.nombre || ''}`}
-                        </Typography>
-                        <form onSubmit={handleSubmit}>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} sm={4}>
-                                    <FormControl fullWidth>
-                                        <InputLabel>Día de la semana</InputLabel>
-                                        <Select
-                                            value={formData.dia_semana}
-                                            label="Día de la semana"
-                                            onChange={(e) => setFormData({ ...formData, dia_semana: e.target.value })}
-                                        >
-                                            {DIAS_SEMANA.map((d) => (
-                                                <MenuItem key={d.id} value={d.id}>{d.nombre}</MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-                                </Grid>
-                                <Grid item xs={12} sm={4}>
-                                    <TextField
-                                        fullWidth
-                                        label="Hora de Inicio"
-                                        type="time"
-                                        value={formData.hora_apertura}
-                                        onChange={(e) => setFormData({ ...formData, hora_apertura: e.target.value })}
-                                        InputLabelProps={{ shrink: true }}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={4}>
-                                    <TextField
-                                        fullWidth
-                                        label="Hora de Cierre"
-                                        type="time"
-                                        value={formData.hora_cierre}
-                                        onChange={(e) => setFormData({ ...formData, hora_cierre: e.target.value })}
-                                        InputLabelProps={{ shrink: true }}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}>
-                                    <Button variant="outlined" color="secondary" startIcon={<CancelIcon />} onClick={() => setShowForm(false)}>
-                                        Cancelar
-                                    </Button>
-                                    <Button variant="contained" color="primary" type="submit" startIcon={<SaveIcon />}>
-                                        Guardar
-                                    </Button>
-                                </Grid>
-                            </Grid>
-                        </form>
-                    </CardContent>
-                </Card>
-            ) : (
-                <Box sx={{ mb: 4, maxWidth: 400 }}>
-                    <FormControl fullWidth size="small">
-                        <InputLabel>Seleccionar Veterinario / Doctor</InputLabel>
-                        <Select
-                            value={selectedDoctor}
-                            label="Seleccionar Veterinario / Doctor"
-                            onChange={(e) => setSelectedDoctor(e.target.value)}
-                        >
-                            {doctores.map((doc) => (
-                                <MenuItem key={doc.id_doctor} value={doc.id_doctor}>
-                                    {doc.nombre} {doc.especialidad ? `(${doc.especialidad})` : ''}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </Box>
+            {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                </Alert>
             )}
 
-            {!showForm && (
-                <TableContainer component={Paper} elevation={3}>
-                    <Table sx={{ minWidth: 650 }}>
-                        <TableHead>
-                            <TableRow sx={{ backgroundColor: '#E1F5FE' }}>
-                                <TableCell><strong>Veterinario</strong></TableCell>
-                                <TableCell><strong>Especialidad</strong></TableCell>
-                                <TableCell align="center"><strong>Día de Atención</strong></TableCell>
-                                <TableCell align="center"><strong>Hora Inicio</strong></TableCell>
-                                <TableCell align="center"><strong>Hora Cierre</strong></TableCell>
-                                <TableCell align="center"><strong>Acciones</strong></TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {horariosFiltrados.length > 0 ? (
-                                horariosFiltrados.map((horario, index) => {
-                                    const diaNombre = DIAS_SEMANA.find(d => Number(d.id) === Number(horario.dia_semana))?.nombre || `Día ${horario.dia_semana}`;
-                                    const idRegistro = horario.id_horario || horario.id_excepciones_horario || index;
-                                    return (
-                                        <TableRow key={idRegistro} hover>
-                                            <TableCell>{doctorActual?.nombre || horario.nombre_doctor}</TableCell>
-                                            <TableCell>{doctorActual?.especialidad || horario.especialidad}</TableCell>
-                                            <TableCell align="center">{diaNombre}</TableCell>
-                                            <TableCell align="center">{horario.hora_apertura}</TableCell>
-                                            <TableCell align="center">{horario.hora_cierre}</TableCell>
+            {mensaje && (
+                <Alert
+                    severity="success"
+                    sx={{ mb: 2 }}
+                    onClose={() => setMensaje('')}
+                >
+                    {mensaje}
+                </Alert>
+            )}
+
+            {showForm === null ? (
+                <>
+                    {/* Filtro de veterinarios */}
+                    <Box sx={{ maxWidth: 400, mb: 4 }}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel>
+                                Seleccionar Veterinario / Doctor
+                            </InputLabel>
+
+                            <Select
+                                value={selectedDoctor}
+                                label="Seleccionar Veterinario / Doctor"
+                                onChange={(e) => {
+                                    setSelectedDoctor(String(e.target.value));
+                                    setError('');
+                                    setMensaje('');
+                                }}
+                            >
+                                {doctores.map(doc => (
+                                    <MenuItem
+                                        key={doc.id_doctor}
+                                        value={String(doc.id_doctor)}
+                                    >
+                                        {doc.nombre}
+                                        {doc.especialidad
+                                            ? ` (${doc.especialidad})`
+                                            : ''}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Box>
+
+                    {/* Pestañas compactas a la izquierda */}
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'flex-start',
+                            borderBottom: 1,
+                            borderColor: 'divider',
+                            mb: 3
+                        }}
+                    >
+                        <Tabs
+                            value={vista}
+                            onChange={(_, nuevaVista) => {
+                                setVista(nuevaVista);
+                                setError('');
+                                setMensaje('');
+                            }}
+                            variant="standard"
+                            sx={{
+                                width: 'fit-content',
+                                maxWidth: '100%',
+                                '& .MuiTab-root': {
+                                    textTransform: 'none',
+                                    fontWeight: 500
+                                }
+                            }}
+                        >
+                            <Tab label="Horarios de atención" />
+                            <Tab label="Bloqueos de horario" />
+                        </Tabs>
+                    </Box>
+
+                    {/* Botón de creación alineado a la derecha */}
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            mb: 3
+                        }}
+                    >
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<AddIcon />}
+                            disabled={!selectedDoctor}
+                            onClick={
+                                vista === 0
+                                    ? crearHorario
+                                    : crearBloqueo
+                            }
+                        >
+                            {vista === 0
+                                ? 'Nuevo Horario'
+                                : 'Nuevo Bloqueo'}
+                        </Button>
+                    </Box>
+
+                    {/* Listado de horarios de atención */}
+                    {vista === 0 && (
+                        <TableContainer
+                            component={Paper}
+                            elevation={3}
+                        >
+                            <Table sx={{ minWidth: 650 }}>
+                                <TableHead>
+                                    <TableRow sx={{ bgcolor: '#E1F5FE' }}>
+                                        {[
+                                            'Veterinario',
+                                            'Especialidad',
+                                            'Día de Atención',
+                                            'Hora Inicio',
+                                            'Hora Cierre',
+                                            'Acciones'
+                                        ].map(columna => (
+                                            <TableCell
+                                                key={columna}
+                                                align={
+                                                    columna === 'Veterinario' ||
+                                                    columna === 'Especialidad'
+                                                        ? 'left'
+                                                        : 'center'
+                                                }
+                                            >
+                                                <strong>
+                                                    {columna}
+                                                </strong>
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                </TableHead>
+
+                                <TableBody>
+                                    {horariosFiltrados.map(horario => (
+                                        <TableRow
+                                            key={horario.id_horario}
+                                            hover
+                                        >
+                                            <TableCell>
+                                                {doctorActual?.nombre ||
+                                                    horario.nombre_doctor}
+                                            </TableCell>
+
+                                            <TableCell>
+                                                {doctorActual?.especialidad ||
+                                                    horario.especialidad}
+                                            </TableCell>
+
                                             <TableCell align="center">
-                                                <IconButton 
-                                                    color="info" 
-                                                    onClick={() => navigate(`/horarios/detalle/${idRegistro}`)} 
-                                                    title="Ver detalle del horario"
+                                                {DIAS_SEMANA[
+                                                    Number(
+                                                        horario.dia_semana
+                                                    ) - 1
+                                                ] || '-'}
+                                            </TableCell>
+
+                                            <TableCell align="center">
+                                                {horario.hora_apertura}
+                                            </TableCell>
+
+                                            <TableCell align="center">
+                                                {horario.hora_cierre}
+                                            </TableCell>
+
+                                            <TableCell align="center">
+                                                <IconButton
+                                                    color="info"
+                                                    title="Ver detalle"
+                                                    onClick={() =>
+                                                        navigate(
+                                                            `/horarios/detalle/${horario.id_horario}`
+                                                        )
+                                                    }
                                                 >
                                                     <VisibilityIcon />
                                                 </IconButton>
-                                                <IconButton color="primary" onClick={() => handleEdit(horario)} title="Editar horario">
+
+                                                <IconButton
+                                                    color="primary"
+                                                    title="Editar horario"
+                                                    onClick={() =>
+                                                        editarHorario(horario)
+                                                    }
+                                                >
                                                     <EditIcon />
                                                 </IconButton>
-                                                <IconButton color="error" onClick={() => handleDelete(idRegistro)} title="Eliminar horario">
+
+                                                <IconButton
+                                                    color="error"
+                                                    title="Eliminar horario"
+                                                    onClick={() =>
+                                                        eliminarHorario(
+                                                            horario.id_horario
+                                                        )
+                                                    }
+                                                >
                                                     <DeleteIcon />
                                                 </IconButton>
                                             </TableCell>
                                         </TableRow>
-                                    );
-                                })
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={6} align="center">
-                                        No hay registros de horarios cargados para este veterinario.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                                    ))}
+
+                                    {horariosFiltrados.length === 0 && (
+                                        <TableRow>
+                                            <TableCell
+                                                colSpan={6}
+                                                align="center"
+                                            >
+                                                No hay horarios registrados
+                                                para este veterinario.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )}
+
+                    {/* Listado de bloqueos */}
+                    {vista === 1 && (
+                        <TableContainer
+                            component={Paper}
+                            elevation={3}
+                        >
+                            <Table sx={{ minWidth: 650 }}>
+                                <TableHead>
+                                    <TableRow sx={{ bgcolor: '#E1F5FE' }}>
+                                        {[
+                                            'Veterinario',
+                                            'Fecha',
+                                            'Día',
+                                            'Hora Inicio',
+                                            'Hora Fin',
+                                            'Motivo',
+                                            'Acciones'
+                                        ].map(columna => (
+                                            <TableCell
+                                                key={columna}
+                                                align="center"
+                                            >
+                                                <strong>
+                                                    {columna}
+                                                </strong>
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                </TableHead>
+
+                                <TableBody>
+                                    {bloqueosFiltrados.map(bloqueo => (
+                                        <TableRow
+                                            key={
+                                                bloqueo.id_excepciones_horario
+                                            }
+                                            hover
+                                        >
+                                            <TableCell align="center">
+                                                {bloqueo.nombre_doctor}
+                                            </TableCell>
+
+                                            <TableCell align="center">
+                                                {formatearFecha(
+                                                    bloqueo.fecha
+                                                )}
+                                            </TableCell>
+
+                                            <TableCell align="center">
+                                                {DIAS_SEMANA[
+                                                    Number(
+                                                        bloqueo.dia_semana
+                                                    ) - 1
+                                                ] || '-'}
+                                            </TableCell>
+
+                                            <TableCell align="center">
+                                                {bloqueo.hora_apertura}
+                                            </TableCell>
+
+                                            <TableCell align="center">
+                                                {bloqueo.hora_cierre}
+                                            </TableCell>
+
+                                            <TableCell align="center">
+                                                {bloqueo.motivo ||
+                                                    'Sin motivo'}
+                                            </TableCell>
+
+                                            <TableCell align="center">
+                                                <IconButton
+                                                    color="info"
+                                                    title="Ver detalle"
+                                                    onClick={() =>
+                                                        verDetalleBloqueo(
+                                                            bloqueo.id_excepciones_horario
+                                                        )
+                                                    }
+                                                >
+                                                    <VisibilityIcon />
+                                                </IconButton>
+
+                                                <IconButton
+                                                    color="error"
+                                                    title="Eliminar bloqueo"
+                                                    onClick={() =>
+                                                        eliminarBloqueo(
+                                                            bloqueo.id_excepciones_horario
+                                                        )
+                                                    }
+                                                >
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+
+                                    {bloqueosFiltrados.length === 0 && (
+                                        <TableRow>
+                                            <TableCell
+                                                colSpan={7}
+                                                align="center"
+                                            >
+                                                No hay bloqueos registrados
+                                                para este veterinario.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )}
+                </>
+            ) : (
+                
+                <Card
+                    elevation={3}
+                    sx={{
+                        borderRadius:
+                            showForm === 'horario' ? 2 : 3,
+                        maxWidth:
+                            showForm === 'horario'
+                                ? '100%'
+                                : 850,
+                        mx: 'auto'
+                    }}
+                >
+                    <CardContent
+                        sx={{
+                            p: 4,
+                            '&:last-child': {
+                                pb: 4
+                            }
+                        }}
+                    >
+
+                        {/* Título específico del formulario */}
+                        <Typography
+                            variant="h5"
+                            sx={{
+                                mb: showForm === 'horario' ? 2 : 3,
+                                textAlign: 'center',
+                                color:
+                                    showForm === 'bloqueo'
+                                        ? 'primary.main'
+                                        : 'text.primary'
+                            }}
+                        >
+                            {showForm === 'bloqueo'
+                                ? 'Registrar Nuevo Bloqueo'
+                                : editId !== null
+                                    ? `Modificar Horario para: ${doctorActual?.nombre || ''}`
+                                    : `Registrar Nuevo Horario para: ${doctorActual?.nombre || ''}`}
+                        </Typography>
+
+                        {/* El bloqueo mantiene el nombre separado */}
+                        {showForm === 'bloqueo' && (
+                            <Typography
+                                sx={{
+                                    mb: 3,
+                                    textAlign: 'center'
+                                }}
+                            >
+                                <strong>Veterinario:</strong>{' '}
+                                {doctorActual?.nombre || '-'}
+                            </Typography>
+                        )}
+
+                        {/* Formulario de horarios */}
+                        {showForm === 'horario' && (
+                            <Box
+                                component="form"
+                                onSubmit={guardarHorario}
+                            >
+                                <Stack
+                                    direction="row"
+                                    spacing={2}
+                                    alignItems="center"
+                                    flexWrap="wrap"
+                                    useFlexGap
+                                >
+                                    <FormControl
+                                        sx={{ width: 100 }}
+                                        error={Boolean(
+                                            errores.dia_semana
+                                        )}
+                                    >
+                                        <InputLabel>
+                                            Día de la semana
+                                        </InputLabel>
+
+                                        <Select
+                                            label="Día de la semana"
+                                            value={formData.dia_semana}
+                                            onChange={(e) =>
+                                                actualizarHorario(
+                                                    'dia_semana',
+                                                    Number(e.target.value)
+                                                )
+                                            }
+                                        >
+                                            {DIAS_SEMANA.map((dia, index) => (
+                                                <MenuItem
+                                                    key={index + 1}
+                                                    value={index + 1}
+                                                >
+                                                    {dia}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+
+                                    <TextField
+                                        label="Hora de Inicio"
+                                        type="time"
+                                        sx={{ width: 115 }}
+                                        slotProps={{
+                                            inputLabel: {
+                                                shrink: true
+                                            }
+                                        }}
+                                        value={formData.hora_apertura}
+                                        onChange={(e) =>
+                                            actualizarHorario(
+                                                'hora_apertura',
+                                                e.target.value
+                                            )
+                                        }
+                                        error={Boolean(
+                                            errores.hora_apertura
+                                        )}
+                                        helperText={
+                                            errores.hora_apertura
+                                        }
+                                    />
+
+                                    <TextField
+                                        label="Hora de Cierre"
+                                        type="time"
+                                        sx={{ width: 115 }}
+                                        slotProps={{
+                                            inputLabel: {
+                                                shrink: true
+                                            }
+                                        }}
+                                        value={formData.hora_cierre}
+                                        onChange={(e) =>
+                                            actualizarHorario(
+                                                'hora_cierre',
+                                                e.target.value
+                                            )
+                                        }
+                                        error={Boolean(
+                                            errores.hora_cierre
+                                        )}
+                                        helperText={
+                                            errores.hora_cierre
+                                        }
+                                    />
+
+                                    <Button
+                                        variant="outlined"
+                                        color="warning"
+                                        startIcon={<CancelIcon />}
+                                        onClick={cancelarFormulario}
+                                        disabled={guardando}
+                                    >
+                                        Cancelar
+                                    </Button>
+
+                                    <Button
+                                        type="submit"
+                                        variant="contained"
+                                        startIcon={<SaveIcon />}
+                                        disabled={guardando}
+                                    >
+                                        Guardar
+                                    </Button>
+                                </Stack>
+                            </Box>
+                        )}
+
+                        {/* Formulario de bloqueos */}
+                        {showForm === 'bloqueo' && (
+                            <Box
+                                component="form"
+                                onSubmit={guardarBloqueo}
+                            >
+                                <Stack spacing={3}>
+
+                                    <LocalizationProvider
+                                        dateAdapter={AdapterDayjs}
+                                    >
+                                        <DatePicker
+                                            label="Fecha del Bloqueo"
+                                            format="DD/MM/YYYY"
+                                            disablePast
+                                            value={
+                                                formBloqueo.fecha
+                                                    ? dayjs(
+                                                        formBloqueo.fecha
+                                                    )
+                                                    : null
+                                            }
+                                            onChange={(fecha) =>
+                                                actualizarBloqueo(
+                                                    'fecha',
+                                                    fecha?.isValid()
+                                                        ? fecha.format(
+                                                            'YYYY-MM-DD'
+                                                        )
+                                                        : ''
+                                                )
+                                            }
+                                            slotProps={{
+                                                textField: {
+                                                    fullWidth: true,
+                                                    error: Boolean(
+                                                        errores.fecha
+                                                    ),
+                                                    helperText:
+                                                        errores.fecha
+                                                }
+                                            }}
+                                        />
+                                    </LocalizationProvider>
+
+                                    <Stack
+                                        direction={{
+                                            xs: 'column',
+                                            sm: 'row'
+                                        }}
+                                        spacing={2}
+                                    >
+                                        <TextField
+                                            fullWidth
+                                            type="time"
+                                            label="Hora de Inicio"
+                                            slotProps={{
+                                                inputLabel: {
+                                                    shrink: true
+                                                }
+                                            }}
+                                            value={
+                                                formBloqueo.hora_apertura
+                                            }
+                                            onChange={(e) =>
+                                                actualizarBloqueo(
+                                                    'hora_apertura',
+                                                    e.target.value
+                                                )
+                                            }
+                                            error={Boolean(
+                                                errores.hora_apertura
+                                            )}
+                                            helperText={
+                                                errores.hora_apertura
+                                            }
+                                        />
+
+                                        <TextField
+                                            fullWidth
+                                            type="time"
+                                            label="Hora de Finalización"
+                                            slotProps={{
+                                                inputLabel: {
+                                                    shrink: true
+                                                }
+                                            }}
+                                            value={
+                                                formBloqueo.hora_cierre
+                                            }
+                                            onChange={(e) =>
+                                                actualizarBloqueo(
+                                                    'hora_cierre',
+                                                    e.target.value
+                                                )
+                                            }
+                                            error={Boolean(
+                                                errores.hora_cierre
+                                            )}
+                                            helperText={
+                                                errores.hora_cierre
+                                            }
+                                        />
+                                    </Stack>
+
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        minRows={3}
+                                        label="Motivo (Opcional)"
+                                        value={formBloqueo.motivo}
+                                        onChange={(e) =>
+                                            actualizarBloqueo(
+                                                'motivo',
+                                                e.target.value
+                                            )
+                                        }
+                                        error={Boolean(
+                                            errores.motivo
+                                        )}
+                                        helperText={
+                                            errores.motivo ||
+                                            `${formBloqueo.motivo.length}/150 caracteres`
+                                        }
+                                    />
+
+                                    <Alert severity="info">
+                                        El bloqueo debe estar dentro del
+                                        horario de atención del veterinario.
+                                        No se permitirá si existen citas
+                                        pendientes o confirmadas en ese rango.
+                                    </Alert>
+
+                                    <Stack
+                                        direction="row"
+                                        justifyContent="flex-end"
+                                        spacing={2}
+                                    >
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<CancelIcon />}
+                                            onClick={cancelarFormulario}
+                                            disabled={guardando}
+                                        >
+                                            Cancelar
+                                        </Button>
+
+                                        <Button
+                                            type="submit"
+                                            variant="contained"
+                                            startIcon={<SaveIcon />}
+                                            disabled={guardando}
+                                        >
+                                            {guardando
+                                                ? 'Guardando...'
+                                                : 'Guardar Bloqueo'}
+                                        </Button>
+                                    </Stack>
+                                </Stack>
+                            </Box>
+                        )}
+                    </CardContent>
+                </Card>
             )}
         </Box>
     );

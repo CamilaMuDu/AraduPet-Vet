@@ -18,12 +18,14 @@ import Tooltip from "@mui/material/Tooltip";
 import PetsIcon from "@mui/icons-material/Pets";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { useAuth } from "../../context/AuthContext";
+import { useCart } from "../../hooks/useCart";
 
 export default function Header() {
 
   const navigate = useNavigate();
 
   const { usuario, logout } = useAuth();
+  const { cart, getCountItems } = useCart();
   const esAdministrador = usuario?.rol === "Administrador";
 
   const esEncargado = usuario?.rol === "Encargado";
@@ -242,9 +244,9 @@ export default function Header() {
       open={isMobileOpcionesMenuOpen}
       onClose={handleOpcionesMenuClose}
     >
-      <MenuItem>
+      <MenuItem onClick={() => { handleOpcionesMenuClose(); navigate('/carrito'); }}>
         <IconButton size="large" color="inherit">
-          <Badge badgeContent={4}
+          <Badge badgeContent={getCountItems(cart)}
             color="primary">
             <ShoppingCartIcon />
           </Badge>
@@ -315,8 +317,8 @@ export default function Header() {
           {menuPrincipal}
           <Box sx={{ flexGrow: 1 }} />
           <Box sx={{ display: { xs: "none", md: "flex" } }}>
-            <IconButton size="large" color="inherit">
-              <Badge badgeContent={4} color="primary">
+            <IconButton size="large" color="inherit" aria-label="Ir al carrito" onClick={() => navigate('/carrito')}>
+              <Badge badgeContent={getCountItems(cart)} color="primary">
                 <ShoppingCartIcon />
               </Badge>
             </IconButton>

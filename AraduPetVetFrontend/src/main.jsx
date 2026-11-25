@@ -15,8 +15,10 @@ import { ListaMantenimientoProductos } from "./components/Producto/ListaMantenim
 import { ListServicios } from "./components/Servicios/ListServicios.jsx";
 import { CatalogoServicios } from "./components/Servicios/CatalogoServicios.jsx";
 import { DetalleServicio } from "./components/Servicios/DetalleServicio.jsx";
-import Citas from "./components/Citas/Citas.jsx";
-import DetalleCita from "./components/Citas/DetalleCita";
+import HistorialReservas from "./components/Citas/HistorialReservas.jsx";
+import RegistroReservaAdmin from "./components/Citas/RegistroReservaAdmin.jsx";
+import CarritoReservas from "./components/Citas/CarritoReservas.jsx";
+import DetalleReserva from "./components/Citas/DetalleReserva.jsx";
 import { ListaFacturas } from "./components/Factura/ListaFacturas.jsx";
 import { DetalleFactura } from "./components/Factura/DetalleFactura.jsx";
 import { ListaMantenimientoDoctores } from "./components/Doctor/ListaMantenimientoDoctores";
@@ -24,6 +26,7 @@ import { DoctorMantenimiento } from "./components/Doctor/DoctorMantenimiento.jsx
 import { ListaMantenimientoHorarios } from "./components/Doctor/ListaMantenimientoHorarios.jsx";
 import { DetalleDoctor } from "./components/Doctor/DetalleDoctor";
 import { DetalleHorario } from "./components/Doctor/DetalleHorario";
+import { DetalleBloqueoHorario } from './components/Doctor/DetalleBloqueoHorario.jsx';
 import Login from "./components/Usuario/Login.jsx";
 import Registro from "./components/Usuario/Registro.jsx";
 import RutaProtegida from "./components/Usuario/RutaProtegida.jsx";
@@ -59,11 +62,15 @@ const rutas = createBrowserRouter([
               },
               {
                 path: "/citas",
-                element: <Citas />,
+                element: <HistorialReservas />,
               },
               {
-                path: "/citas/detalle/:id",
-                element: <DetalleCita />,
+                path: "/carrito",
+                element: <CarritoReservas />,
+              },
+              {
+                path: "/reservas/detalle/:id",
+                element: <DetalleReserva />,
               },
               {
                 path: "/productos",
@@ -97,6 +104,10 @@ const rutas = createBrowserRouter([
                 ),
                 children: [
                   {
+                    path: "/citas/nueva",
+                    element: <RegistroReservaAdmin />,
+                  },
+                  {
                     path: "/productos/mantenimiento",
                     element: <ListaMantenimientoProductos />,
                   },
@@ -119,6 +130,10 @@ const rutas = createBrowserRouter([
                   {
                     path: "/horarios/detalle/:id",
                     element: <DetalleHorario />,
+                  },
+                  {
+                      path: '/horarios/bloqueos/detalle/:id',
+                      element: <DetalleBloqueoHorario />,
                   },
                   {
                     path: "/veterinarios/mantenimiento",

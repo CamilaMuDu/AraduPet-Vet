@@ -19,6 +19,7 @@ import {
 import { Link } from 'react-router-dom';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import FacturaService from '../../services/FacturaService';
+import { useAuth } from '../../context/AuthContext';
 
 const formatoColones = (valor) => {
   return new Intl.NumberFormat('es-CR', {
@@ -30,13 +31,30 @@ const formatoColones = (valor) => {
 };
 
 export function ListaFacturas() {
+  const { token } = useAuth();
+
   const [facturas, setFacturas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    FacturaService.getFacturas()
+    if (!token) {
+      setFacturas([]);
+      setError('Debe iniciar sesión.');
+      setLoading(false);
+      return;
+    }
+
+    let activo = true;
+
+    setLoading(true);
+    setError('');
+    setFacturas([]);
+
+    FacturaService.getFacturas(token)
       .then((response) => {
+        if (!activo) return;
+
         const resultado = response.data;
 
         if (Array.isArray(resultado)) {
@@ -56,23 +74,39 @@ export function ListaFacturas() {
           setFacturas([]);
         }
       })
-      .catch(() => {
-        setError('No se pudieron cargar las facturas.');
+      .catch((error) => {
+        if (!activo) return;
+
+        setError(
+          error.response?.data?.result ||
+          'No se pudieron cargar las facturas.'
+        );
       })
       .finally(() => {
-        setLoading(false);
+        if (activo) setLoading(false);
       });
-  }, []);
+
+    return () => {
+      activo = false;
+    };
+  }, [token]);
 
   const colorEstado = (estado) => {
     switch (String(estado).trim().toLowerCase()) {
+      case 'facturado':
       case 'pagada':
         return 'success';
+
+      case 'proforma':
+        return 'info';
+
       case 'pendiente':
         return 'warning';
+
       case 'anulada':
       case 'cancelada':
         return 'error';
+
       default:
         return 'default';
     }
@@ -109,7 +143,7 @@ export function ListaFacturas() {
 
       {!error && facturas.length === 0 ? (
         <Alert severity="info">
-          No hay facturas registradas.
+          No hay facturas disponibles.
         </Alert>
       ) : !error && (
         <TableContainer component={Paper} elevation={3}>
@@ -119,7 +153,12 @@ export function ListaFacturas() {
                 <TableCell><strong>N.º Factura</strong></TableCell>
                 <TableCell><strong>Fecha</strong></TableCell>
                 <TableCell><strong>Cliente</strong></TableCell>
-                <TableCell><strong>Estado</strong></TableCell>
+                <TableCell>
+                  <strong>Estado</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Estado de pago</strong>
+                </TableCell>
                 <TableCell align="right">
                   <strong>Total</strong>
                 </TableCell>
@@ -140,6 +179,14 @@ export function ListaFacturas() {
                     <Chip
                       label={factura.estado}
                       color={colorEstado(factura.estado)}
+                      size="small"
+                      sx={{ fontWeight: 'bold' }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={factura.estado_pago || 'No aplica'}
+                      color={colorEstado(factura.estado_pago)}
                       size="small"
                       sx={{ fontWeight: 'bold' }}
                     />

@@ -7,10 +7,13 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import ServicioService from '../../services/ServiciosService';
+import { useCart } from '../../hooks/useCart';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 
 export const DetalleServicio = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { addItem } = useCart();
     const [servicio, setServicio] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -109,7 +112,6 @@ export const DetalleServicio = () => {
                         )}
                     </Box>
 
-                    {/* Sección Derecha: Información detallada */}
                     <CardContent sx={{ p: 4, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                         <Typography variant="h4" component="h1" gutterBottom color="primary" sx={{ fontWeight: 500 }}>
                             {servicio.nombre}
@@ -118,6 +120,15 @@ export const DetalleServicio = () => {
                         <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#000000', mb: 2 }}>
                             ₡{parseFloat(servicio.precio).toLocaleString('es-CR', { minimumFractionDigits: 2 })}
                         </Typography>
+
+                        <Button
+                            variant="contained"
+                            startIcon={<AddShoppingCartIcon />}
+                            onClick={() => addItem(servicio)}
+                            sx={{ alignSelf: 'flex-start', mb: 2 }}
+                        >
+                            Agregar al carrito
+                        </Button>
 
                         <Divider sx={{ my: 1.5 }} />
 
